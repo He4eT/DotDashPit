@@ -93,20 +93,6 @@ function gameplay() {
   drawPlayer()
 }
 
-function checkColisions() {
-  if (
-    enemies
-      .map((enemy) => [
-        enemy,
-        Math.hypot(player.x - enemy.x[0], player.y - enemy.y[0]),
-      ])
-      .some(([enemy, distance]) => distance < enemy.dangerZone)
-  ) {
-    cls(10)
-    currentStage = 'gameover'
-  }
-}
-
 function handleMoves() {
   player.speed = btn(BTN_A) ? 2 : 1
 
@@ -119,6 +105,8 @@ function handleMoves() {
 function handleMorse() {
   player.sprite = btn(BTN_B) ? 65 : 64
 }
+
+// Enemies
 
 function spawn() {
   if (enemies.length === 0) {
@@ -133,6 +121,32 @@ function spawn() {
   }
 }
 
+function checkColisions() {
+  if (
+    enemies
+      .map((enemy) => [
+        enemy,
+        Math.hypot(player.x - enemy.x[0], player.y - enemy.y[0]),
+      ])
+      .some(([enemy, distance]) => distance < enemy.dangerZone)
+  ) {
+    cls(10)
+    currentStage = 'gameover'
+  }
+}
+
+// Draw
+
+function drawSprite(spriteIndex, x, y) {
+  const colorkey = 0
+  spr(
+    spriteIndex,
+    interface.arenaX + x - interface.spriteHalfSize,
+    interface.arenaY + y - interface.spriteHalfSize,
+    colorkey,
+  )
+}
+
 function drawInterface() {
   cls(0)
 }
@@ -142,23 +156,13 @@ function drawArena() {
 }
 
 function drawEnemies() {
-  enemies.forEach((enemy) => {
-    spr(
-      80,
-      interface.arenaX + enemy.x[0] - interface.spriteHalfSize,
-      interface.arenaY + enemy.y[0] - interface.spriteHalfSize,
-      0,
-    )
-  })
+  enemies
+    .map((enemy) => [80, enemy.x[0], enemy.y[0]])
+    .forEach((spriteData) => drawSprite(...spriteData))
 }
 
 function drawPlayer() {
-  spr(
-    player.sprite,
-    interface.arenaX + player.x - interface.spriteHalfSize,
-    interface.arenaY + player.y - interface.spriteHalfSize,
-    0,
-  )
+  drawSprite(player.sprite, player.x, player.y)
 }
 
 // Constants
