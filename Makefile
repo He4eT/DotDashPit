@@ -5,6 +5,9 @@ build_dir := ./build
 
 tic_cmd := tic80 --skip --fs './'
 
+prettier:
+	npx prettier --write ${game_src}
+
 run:
 	${tic_cmd} ${game_src}
 
