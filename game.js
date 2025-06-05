@@ -96,10 +96,18 @@ function gameplay() {
 function handleMoves() {
   player.speed = btn(BTN_A) ? 2 : 1
 
-  if (btn(BTN_U)) player.y = Math.max(player.y - player.speed, arena.top)
-  if (btn(BTN_D)) player.y = Math.min(player.y + player.speed, arena.bottom)
-  if (btn(BTN_L)) player.x = Math.max(player.x - player.speed, arena.left)
-  if (btn(BTN_R)) player.x = Math.min(player.x + player.speed, arena.right)
+  let dx = 0
+  if (btn(BTN_L)) dx -= 1
+  if (btn(BTN_R)) dx += 1
+
+  let dy = 0
+  if (btn(BTN_U)) dy -= 1
+  if (btn(BTN_D)) dy += 1
+
+  const norm = player.speed / ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
+
+  player.x = Math.max(arena.left, Math.min(arena.right, player.x + dx * norm))
+  player.y = Math.max(arena.top, Math.min(arena.bottom, player.y + dy * norm))
 }
 
 function handleMorse() {
@@ -130,7 +138,6 @@ function checkColisions() {
       ])
       .some(([enemy, distance]) => distance < enemy.dangerZone)
   ) {
-    cls(10)
     currentStage = 'gameover'
   }
 }
