@@ -10,33 +10,57 @@ function TIC() {
   gameStages[currentStage]()
 }
 
-/* Stages */
-
-let currentStage = 'gameplay'
+// Stages
 
 const gameStages = {
+  mainMenu,
   gameplay,
 }
 
-/* State */
+let currentStage = 'mainMenu'
+
+// State
 
 let t = 0
 let x = 96
 let y = 24
 
-/* Main Gameplay */
+// Main Menu
+
+function mainMenu() {
+  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)) {
+    currentStage = 'gameplay'
+  }
+
+  const title = 'Morse Pit'
+  const instruction = 'Press any key to start'
+
+  cls(0)
+
+  print(title, 12, 12, 3, false, 2)
+  print(instruction, 12, 30, 4)
+}
+
+// Gameplay
 
 function gameplay() {
-  if (btn(0)) y--
-  if (btn(1)) y++
-  if (btn(2)) x--
-  if (btn(3)) x++
+  if (btn(BTN_U)) y--
+  if (btn(BTN_D)) y++
+  if (btn(BTN_L)) x--
+  if (btn(BTN_R)) x++
 
   cls(13)
   spr(1 + (((t % 60) / 30) | 0) * 2, x, y, 14, 3, 0, 0, 2, 2)
   print('HELLO WORLD!', 84, 84)
   t++
 }
+
+// Constants
+
+// Buttons
+const [BTN_U, BTN_D, BTN_L, BTN_R, BTN_A, BTN_B, BTN_X, BTN_Y] = [
+  ...Array(8).keys(),
+]
 
 // <TILES>
 // 001:eccccccccc888888caaaaaaaca888888cacccccccacc0ccccacc0ccccacc0ccc
