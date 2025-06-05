@@ -1,26 +1,41 @@
-// title:   game title
-// author:  game developer, email, etc.
-// desc:    short description
-// site:    website link
-// license: MIT License (change this to your license of choice)
+// title:   MorsePit
+// author:  He4eT@oddsquat.org
+// desc:    Defeat endless waves of enemies using Morse code.
+// site:    https://github.com/He4eT/MorsePit
+// license: MIT License
 // version: 0.1
 // script:  js
 
-var t=0
-var x=96
-var y=24
+function TIC() {
+  gameStages[currentStage]()
+}
 
-function TIC()
-{
-	if(btn(0))y--
-	if(btn(1))y++
-	if(btn(2))x--
-	if(btn(3))x++
+/* Stages */
 
-	cls(13)
-	spr(1+((t%60)/30|0)*2,x,y,14,3,0,0,2,2)
-	print("HELLO WORLD!",84,84)
-	t++
+let currentStage = 'gameplay'
+
+const gameStages = {
+  gameplay,
+}
+
+/* State */
+
+let t = 0
+let x = 96
+let y = 24
+
+/* Main Gameplay */
+
+function gameplay() {
+  if (btn(0)) y--
+  if (btn(1)) y++
+  if (btn(2)) x--
+  if (btn(3)) x++
+
+  cls(13)
+  spr(1 + (((t % 60) / 30) | 0) * 2, x, y, 14, 3, 0, 0, 2, 2)
+  print('HELLO WORLD!', 84, 84)
+  t++
 }
 
 // <TILES>
@@ -51,4 +66,3 @@ function TIC()
 // <PALETTE>
 // 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 // </PALETTE>
-
