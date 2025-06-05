@@ -24,18 +24,18 @@ let currentStage = 'mainMenu'
 
 // State
 
-let interface = {
-  arenaX: 7,
-  arenaY: 7,
-  spriteSize: 7,
-  spriteHalfSize: 3,
-}
-
 let arena = {
+  // Screen position
+  x: 7,
+  y: 7,
+  // Bounds
   top: 0,
   right: 225,
   bottom: 89,
   left: 0,
+  // Sprite size
+  spriteSize: 7,
+  spriteHalfSize: 3,
 }
 
 let player = {
@@ -54,24 +54,24 @@ function mainMenu() {
     currentStage = 'gameplay'
   }
 
-  const title = 'Morse Pit'
-  const instruction = 'Press any key to start'
-
   cls(0)
 
+  const title = 'Morse Pit'
   print(title, 12, 12, 3, false, 2)
+
+  const instruction = 'Press any key to start'
   print(instruction, 12, 30, 4)
 }
 
 // Gameover
 
 function gameover() {
-  const title = 'Game Over'
-
   cls(0)
 
   drawEnemies()
   drawPlayer()
+
+  const title = 'Game Over'
   print(title, 12, 12, 10, false, 2)
 }
 
@@ -141,8 +141,8 @@ function drawSprite(spriteIndex, x, y) {
   const colorkey = 0
   spr(
     spriteIndex,
-    interface.arenaX + x - interface.spriteHalfSize,
-    interface.arenaY + y - interface.spriteHalfSize,
+    arena.x + x - arena.spriteHalfSize,
+    arena.y + y - arena.spriteHalfSize,
     colorkey,
   )
 }
