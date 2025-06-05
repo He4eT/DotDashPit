@@ -47,6 +47,8 @@ let player = {
 
 let enemies = []
 
+let effects = []
+
 // Main Menu
 
 function mainMenu() {
@@ -88,7 +90,7 @@ function gameplay() {
 
   drawInterface()
   drawArena()
-  // drawFX()
+  drawFX()
   drawEnemies()
   drawPlayer()
 }
@@ -112,6 +114,25 @@ function handleMoves() {
 
 function handleMorse() {
   player.sprite = btn(BTN_B) ? 65 : 64
+
+  if (btnp(BTN_B, 100, 100)) {
+    if (enemies.length > 0) {
+      effects.unshift({
+        type: 'laser',
+        from: {
+          x: player.x,
+          y: player.y,
+        },
+        to: {
+          x: enemies[0].x[0],
+          y: enemies[0].y[0],
+        },
+        frameColors: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
+      })
+      enemies.shift()
+      trace(enemies.length)
+    }
+  }
 }
 
 // Enemies
@@ -120,8 +141,8 @@ function spawn() {
   if (enemies.length === 0) {
     enemies = [
       {
-        x: [100],
-        y: [50],
+        x: [Math.random() * arena.right],
+        y: [Math.random() * arena.bottom],
         type: 'zombie',
         dangerZone: 8,
       },
@@ -144,12 +165,21 @@ function checkColisions() {
 
 // Draw
 
+function arenaToScreen({ x, y }) {
+  return {
+    x: x + arena.x,
+    y: y + arena.y,
+  }
+}
+
 function drawSprite(spriteIndex, x, y) {
   const colorkey = 0
+  const center = arenaToScreen({ x, y })
+
   spr(
     spriteIndex,
-    arena.x + x - arena.spriteHalfSize,
-    arena.y + y - arena.spriteHalfSize,
+    center.x - arena.spriteHalfSize,
+    center.y - arena.spriteHalfSize,
     colorkey,
   )
 }
@@ -160,6 +190,29 @@ function drawInterface() {
 
 function drawArena() {
   map(0, 0, 30, 15)
+}
+
+function drawFX() {
+  const laser = (effect) => {
+    const color = effect.frameColors.shift()
+    const from = arenaToScreen(effect.from)
+    const to = arenaToScreen(effect.to)
+
+    line(from.x, from.y, to.x, to.y, color)
+
+    circ(from.x, from.y, effect.frameColors.length / 2, color)
+
+    circ(to.x, to.y, effect.frameColors.length / 2, color)
+    circb(to.x, to.y, effect.frameColors.length, color + 3)
+  }
+
+  effects.forEach((effect) =>
+    ({
+      laser,
+    })[effect.type](effect),
+  )
+
+  effects = effects.filter(({ frameColors }) => frameColors.length > 0)
 }
 
 function drawEnemies() {
@@ -227,5 +280,5 @@ const [BTN_U, BTN_D, BTN_L, BTN_R, BTN_A, BTN_B, BTN_X, BTN_Y] = [
 // </TRACKS>
 
 // <PALETTE>
-// 000:000000002b36073642586e75657b8383949693a1a1eee8d5b58900cb4b16dc322fd336826c71c4268bd22aa198859900
+// 000:000000002b36073642586e75657b8383949693a1a1ffffffb58900cb4b16dc322fd336826c71c4268bd22aa198859900
 // </PALETTE>
