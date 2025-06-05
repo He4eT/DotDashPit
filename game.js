@@ -202,11 +202,17 @@ function drawFX() {
     .forEach((effect) =>
       ({
         laser: ({ from, to, frames }) => {
+          // frames: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
           const color = frames.shift()
           line(from.x, from.y, to.x, to.y, color)
           circ(from.x, from.y, frames.length / 2, color)
           circ(to.x, to.y, frames.length / 2, color)
           circb(to.x, to.y, frames.length, color + 3)
+        },
+        nuke: ({ to, frames }) => {
+          // frames: [6, 5, 4, 3, 2],
+          const color = frames.shift()
+          circ(to.x, to.y, Math.pow(frames.length, 5), color)
         },
       })[effect.type](effect),
     )
