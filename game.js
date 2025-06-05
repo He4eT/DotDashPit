@@ -127,7 +127,7 @@ function handleMorse() {
           x: enemies[0].x[0],
           y: enemies[0].y[0],
         },
-        frameColors: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
+        frames: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
       })
       enemies.shift()
       trace(enemies.length)
@@ -193,26 +193,25 @@ function drawArena() {
 }
 
 function drawFX() {
-  const laser = (effect) => {
-    const color = effect.frameColors.shift()
-    const from = arenaToScreen(effect.from)
-    const to = arenaToScreen(effect.to)
+  effects
+    .map((effect) => ({
+      ...effect,
+      from: arenaToScreen(effect.from),
+      to: arenaToScreen(effect.to),
+    }))
+    .forEach((effect) =>
+      ({
+        laser: ({ from, to, frames }) => {
+          const color = frames.shift()
+          line(from.x, from.y, to.x, to.y, color)
+          circ(from.x, from.y, frames.length / 2, color)
+          circ(to.x, to.y, frames.length / 2, color)
+          circb(to.x, to.y, frames.length, color + 3)
+        },
+      })[effect.type](effect),
+    )
 
-    line(from.x, from.y, to.x, to.y, color)
-
-    circ(from.x, from.y, effect.frameColors.length / 2, color)
-
-    circ(to.x, to.y, effect.frameColors.length / 2, color)
-    circb(to.x, to.y, effect.frameColors.length, color + 3)
-  }
-
-  effects.forEach((effect) =>
-    ({
-      laser,
-    })[effect.type](effect),
-  )
-
-  effects = effects.filter(({ frameColors }) => frameColors.length > 0)
+  effects = effects.filter(({ frames }) => frames.length > 0)
 }
 
 function drawEnemies() {
