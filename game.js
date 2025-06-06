@@ -358,45 +358,45 @@ function drawArena() {
 }
 
 const effectHandlers = {
-        laser: ({ from, to, frames }) => {
-          const color = frames.shift()
-          line(from.x, from.y, to.x, to.y, color)
-          circ(from.x, from.y, frames.length / 3, color)
-          circ(to.x, to.y, frames.length / 2, color)
-          circb(to.x, to.y, frames.length, color + 3)
-        },
-        nuke: ({ to, frames }) => {
-          const color = frames.shift()
-          circ(to.x, to.y, Math.pow(frames.length, 5), color)
-        },
-        verticalLine: ({ to, frames }) => {
-          const color = frames.shift()
-          rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
-        },
-        horizontalLine: ({ to, frames }) => {
-          const color = frames.shift()
-          rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
-        },
-        detection: ({ to, frames }) => {
-          const color = frames.shift()
-          const w = arena.spriteHalfSize
-          const d = frames.length + 2 * w
-          const corners = [
-            [+1, +1],
-            [+1, -1],
-            [-1, +1],
-            [-1, -1],
-          ]
+  laser: ({ from, to, frames }) => {
+    const color = frames.shift()
+    line(from.x, from.y, to.x, to.y, color)
+    circ(from.x, from.y, frames.length / 3, color)
+    circ(to.x, to.y, frames.length / 2, color)
+    circb(to.x, to.y, frames.length, color + 3)
+  },
+  nuke: ({ to, frames }) => {
+    const color = frames.shift()
+    circ(to.x, to.y, Math.pow(frames.length, 5), color)
+  },
+  verticalLine: ({ to, frames }) => {
+    const color = frames.shift()
+    rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
+  },
+  horizontalLine: ({ to, frames }) => {
+    const color = frames.shift()
+    rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
+  },
+  detection: ({ to, frames }) => {
+    const color = frames.shift()
+    const w = arena.spriteHalfSize
+    const d = frames.length + 2 * w
+    const corners = [
+      [+1, +1],
+      [+1, -1],
+      [-1, +1],
+      [-1, -1],
+    ]
 
-          corners.forEach(([dx, dy]) => {
-            const x = to.x + dx * d
-            const y = to.y + dy * d
+    corners.forEach(([dx, dy]) => {
+      const x = to.x + dx * d
+      const y = to.y + dy * d
 
-            line(x, y, x - dx * w, y, color)
-            line(x, y, x, y - dy * w, color)
-          })
-        },
-      }
+      line(x, y, x - dx * w, y, color)
+      line(x, y, x, y - dy * w, color)
+    })
+  },
+}
 
 function drawFX() {
   effects
@@ -405,9 +405,7 @@ function drawFX() {
       from: arenaToScreen(effect.from ?? {}),
       to: arenaToScreen(effect.to ?? {}),
     }))
-    .forEach((effect) =>
-      effectHandlers[effect.type](effect),
-    )
+    .forEach((effect) => effectHandlers[effect.type](effect))
 
   effects = effects.filter(({ frames }) => frames.length > 0)
 }
