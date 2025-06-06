@@ -156,7 +156,7 @@ function spawn() {
           x: enemy.x[0],
           y: enemy.y[0],
         },
-        frames: [...Array(5).fill(4)],
+        frames: Array(5).fill(4),
       })
     })
   }
@@ -237,22 +237,25 @@ function drawFX() {
           rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
         },
         detection: ({ to, frames }) => {
+          // Array(5).fill(4)]
           const color = frames.shift()
-          const r = arena.spriteHalfSize
-          const d = frames.length + 2 * r
+          const w = arena.spriteHalfSize
+          const d = frames.length + 2 * w
+          const corners = [
+            [+1, +1],
+            [+1, -1],
+            [-1, +1],
+            [-1, -1],
+          ]
 
-          line(to.x - d, to.y - d, to.x - d + r, to.y - d + 0, color)
-          line(to.x - d, to.y - d, to.x - d + 0, to.y - d + r, color)
+          corners.forEach(([dx, dy]) => {
+            const x = to.x + dx * d
+            const y = to.y + dy * d
 
-          line(to.x + d, to.y - d, to.x + d - r, to.y - d + 0, color)
-          line(to.x + d, to.y - d, to.x + d - 0, to.y - d + r, color)
-
-          line(to.x + d, to.y + d, to.x + d - r, to.y + d + 0, color)
-          line(to.x + d, to.y + d, to.x + d - 0, to.y + d - r, color)
-
-          line(to.x - d, to.y + d, to.x - d + r, to.y + d + 0, color)
-          line(to.x - d, to.y + d, to.x - d + 0, to.y + d - r, color)
-        }
+            line(x, y, x - dx * w, y, color)
+            line(x, y, x, y - dy * w, color)
+          })
+        },
       })[effect.type](effect),
     )
 
@@ -272,7 +275,7 @@ function drawPlayer() {
 // Utils
 
 function rnd(from, to) {
-  return Math.floor(Math.random() * (to - from + 1)) + from;
+  return Math.floor(Math.random() * (to - from + 1)) + from
 }
 
 // Constants
@@ -336,4 +339,3 @@ const [BTN_U, BTN_D, BTN_L, BTN_R, BTN_A, BTN_B, BTN_X, BTN_Y] = [
 // <PALETTE>
 // 000:000000002b36073642586e75657b8383949693a1a1ffffffb58900cb4b16dc322fd336826c71c4268bd22aa198859900
 // </PALETTE>
-
