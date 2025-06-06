@@ -357,15 +357,7 @@ function drawArena() {
   map(0, 0, 30, 15)
 }
 
-function drawFX() {
-  effects
-    .map((effect) => ({
-      ...effect,
-      from: arenaToScreen(effect.from ?? {}),
-      to: arenaToScreen(effect.to ?? {}),
-    }))
-    .forEach((effect) =>
-      ({
+const effectHandlers = {
         laser: ({ from, to, frames }) => {
           const color = frames.shift()
           line(from.x, from.y, to.x, to.y, color)
@@ -404,7 +396,17 @@ function drawFX() {
             line(x, y, x, y - dy * w, color)
           })
         },
-      })[effect.type](effect),
+      }
+
+function drawFX() {
+  effects
+    .map((effect) => ({
+      ...effect,
+      from: arenaToScreen(effect.from ?? {}),
+      to: arenaToScreen(effect.to ?? {}),
+    }))
+    .forEach((effect) =>
+      effectHandlers[effect.type](effect),
     )
 
   effects = effects.filter(({ frames }) => frames.length > 0)
