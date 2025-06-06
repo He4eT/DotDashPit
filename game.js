@@ -79,9 +79,15 @@ let player = {
 }
 
 /**
+ * @typedef {'point' | 'fidget' | 'bounce' | 'zombie'} EnemyType
+ */
+/** @type EnemyType[] */
+const enemyTypes = ['point', 'fidget', 'bounce', 'zombie']
+
+/**
  * @typedef {{
  *   letter: string,
- *   type: 'zombie',
+ *   type: EnemyType,
  *   dangerZone: number,
  *   positions: Point[],
  * }} Enemy
@@ -212,6 +218,18 @@ function spawn() {
 
   arena.wave += 1
 
+  const enemyCount = 1 + Math.floor(arena.wave / 2)
+
+  const getType = (wave) => {
+    if (wave < 2) return 'point'
+    return enemyTypes[rnd(0, enemyTypes.length)]
+  }
+
+  const getDangerZone = (type) => {
+    if (type === 'zombie') return 6
+    return 8
+  }
+
   const getSpawnPosition = () => {
     const minDistance = 50
     let x, y, distance
@@ -224,14 +242,17 @@ function spawn() {
     return { x, y }
   }
 
-  enemies = [
-    {
-      positions: [getSpawnPosition()],
-      type: 'zombie',
-      letter: 'e',
-      dangerZone: 8,
-    },
-  ]
+  enemies = Array(enemyCount)
+    .fill()
+    .map(() => {
+      const type = getType(arena.wave)
+      return {
+        type,
+        letter: 'e',
+        positions: [getSpawnPosition()],
+        dangerZone: getDangerZone(type),
+      }
+    })
 
   enemies.forEach((enemy) => {
     effects.unshift({
