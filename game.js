@@ -118,7 +118,7 @@ function handleMorse() {
   if (btnp(BTN_B, 100, 100)) {
     if (enemies.length > 0) {
       effects.unshift({
-        type: 'laser',
+        type: 'verticalLine',
         from: {
           x: player.x,
           y: player.y,
@@ -127,7 +127,7 @@ function handleMorse() {
           x: enemies[0].x[0],
           y: enemies[0].y[0],
         },
-        frames: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
+        frames: [4, 5, 6, 7, 7, 6, 5, 4],
       })
       enemies.shift()
       trace(enemies.length)
@@ -202,7 +202,7 @@ function drawFX() {
     .forEach((effect) =>
       ({
         laser: ({ from, to, frames }) => {
-          // frames: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
+          // [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1]
           const color = frames.shift()
           line(from.x, from.y, to.x, to.y, color)
           circ(from.x, from.y, frames.length / 3, color)
@@ -210,9 +210,15 @@ function drawFX() {
           circb(to.x, to.y, frames.length, color + 3)
         },
         nuke: ({ to, frames }) => {
-          // frames: [6, 5, 4, 3, 2],
+          // [6, 5, 4, 3, 2]
           const color = frames.shift()
           circ(to.x, to.y, Math.pow(frames.length, 5), color)
+        },
+        verticalLine: ({ to, frames }) => {
+          // [4, 5, 6, 7, 7, 6, 5, 4]
+          const color = frames.shift()
+
+          rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
         },
       })[effect.type](effect),
     )
@@ -230,7 +236,17 @@ function drawPlayer() {
   drawSprite(player.sprite, player.x, player.y)
 }
 
+// Utils
+
+function rnd(from, to) {
+  return Math.floor(Math.random() * (to - from + 1)) + from;
+}
+
 // Constants
+
+// Screen
+const SCREEN_W = 240
+const SCREEN_H = 136
 
 // Buttons
 const [BTN_U, BTN_D, BTN_L, BTN_R, BTN_A, BTN_B, BTN_X, BTN_Y] = [
