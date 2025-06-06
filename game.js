@@ -40,6 +40,7 @@ let currentStage = 'mainMenu'
  *   screenPosition: Point,
  *   bounds: Bounds,
  *   spriteHalfSize: number,
+ *   wave: number,
  * }} Arena
  */
 
@@ -56,6 +57,7 @@ let arena = {
     left: 0,
   },
   spriteHalfSize: 3,
+  wave: 0,
 }
 
 /**
@@ -204,29 +206,40 @@ function destroyEnemiesByLetter(letter) {
 /* Enemies */
 
 function spawn() {
-  if (enemies.length === 0) {
-    enemies = [
-      {
-        positions: [
-          {
-            x: Math.random() * arena.bounds.right,
-            y: Math.random() * arena.bounds.bottom,
-          },
-        ],
-        type: 'zombie',
-        letter: 'e',
-        dangerZone: 8,
-      },
-    ]
-
-    enemies.forEach((enemy) => {
-      effects.unshift({
-        type: 'detection',
-        to: enemy.positions[0],
-        frames: Array(5).fill(4),
-      })
-    })
+  if (enemies.length > 0) {
+    return
   }
+
+  arena.wave += 1
+
+  const getSpawnPosition = () => {
+    const minDistance = 50
+    let x, y, distance
+    do {
+      x = rnd(arena.bounds.left, arena.bounds.right)
+      y = rnd(arena.bounds.top, arena.bounds.bottom)
+      distance = Math.hypot(x - player.position.x, y - player.position.y)
+    } while (distance < minDistance)
+
+    return { x, y }
+  }
+
+  enemies = [
+    {
+      positions: [getSpawnPosition()],
+      type: 'zombie',
+      letter: 'e',
+      dangerZone: 8,
+    },
+  ]
+
+  enemies.forEach((enemy) => {
+    effects.unshift({
+      type: 'detection',
+      to: enemy.positions[0],
+      frames: Array(5).fill(4),
+    })
+  })
 }
 
 function checkColisions() {
