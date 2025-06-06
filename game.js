@@ -23,26 +23,6 @@ let currentStage = 'mainMenu'
 
 /* State */
 
-/**
- * @typedef {{ x: number, y: number }} Point
- */
-
-/**
- * @typedef {{ x: number, y: number }} Point
- *
- * @typedef {{
- *   screenPosition: Point,
- *   bounds: {
- *     top: number,
- *     right: number,
- *     bottom: number,
- *     left: number,
- *   },
- *   spriteHalfSize: number,
- *   wave: number,
- * }} Arena
- */
-
 /** @type {Arena} */
 let arena = {
   screenPosition: {
@@ -59,13 +39,6 @@ let arena = {
   wave: 0,
 }
 
-/**
- * @typedef {{
- *   sprite: number,
- *   speed: number,
- *   position: Point,
- * }} Player
- */
 /** @type {Player} */
 let player = {
   sprite: 64,
@@ -76,25 +49,9 @@ let player = {
   },
 }
 
-/**
- * @typedef {{
- *   type: keyof typeof enemyBehaviors,
- *   positions: Point[],
- *   letter: string,
- *   dangerZone: number,
- * }} Enemy
- */
 /** @type {Enemy[]} */
 let enemies = []
 
-/**
- * @typedef {{
- *   type: keyof typeof effectHandlers
- *   from: Point,
- *   to: Point,
- *   frames: number[],
- * }} Effect
- */
 /** @type {Effect[]} */
 let effects = []
 
@@ -449,6 +406,44 @@ const SCREEN_H = 136
 const [BTN_U, BTN_D, BTN_L, BTN_R, BTN_A, BTN_B, BTN_X, BTN_Y] = [
   ...Array(8).keys(),
 ]
+
+/* Types */
+
+/**
+ * @typedef {{ x: number, y: number }} Point
+ *
+ * @typedef {{
+ *   screenPosition: Point,
+ *   bounds: {
+ *     top: number,
+ *     right: number,
+ *     bottom: number,
+ *     left: number,
+ *   },
+ *   spriteHalfSize: number,
+ *   wave: number,
+ * }} Arena
+ *
+ * @typedef {{
+ *   sprite: number,
+ *   speed: number,
+ *   position: Point,
+ * }} Player
+ *
+ * @typedef {{
+ *   type: keyof typeof enemyBehaviors,
+ *   positions: Point[],
+ *   letter: string,
+ *   dangerZone: number,
+ * }} Enemy
+ *
+ * @typedef {{
+ *   type: keyof typeof effectHandlers
+ *   from: Point,
+ *   to: Point,
+ *   frames: number[],
+ * }} Effect
+ */
 
 // <TILES>
 // 001:1111110012222100123321001233210012222100111111000000000000000000
