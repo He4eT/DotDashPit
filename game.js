@@ -145,7 +145,7 @@ function gameplay() {
   handleMorse()
 
   spawn()
-  /* moveEnemies() */
+  moveEnemies()
 
   drawInterface()
   drawArena()
@@ -222,7 +222,7 @@ function spawn() {
 
   const getType = (wave) => {
     if (wave < 2) return 'point'
-    return enemyTypes[rnd(0, enemyTypes.length)]
+    return enemyTypes[rnd(0, enemyTypes.length - 1)]
   }
 
   const getDangerZone = (type) => {
@@ -249,7 +249,7 @@ function spawn() {
       return {
         type,
         letter: 'e',
-        positions: [getSpawnPosition()],
+        positions: [getSpawnPosition(), getSpawnPosition()],
         dangerZone: getDangerZone(type),
       }
     })
@@ -261,6 +261,58 @@ function spawn() {
       frames: Array(5).fill(4),
     })
   })
+}
+
+function moveEnemies() {
+  enemies.forEach((enemy) => ({
+    'point': () => {},
+    'fidget': () => {},
+    'bounce': () => {
+      const speed = 1
+      const current = enemy.positions[0]
+      const previous = enemy.positions[1]
+
+      /**/
+      let dx = current.x - previous.x
+      let dy = current.y - previous.y
+
+      const length = Math.hypot(dx, dy) || 1
+      dx /= length
+      dy /= length
+      /**/
+
+      let newX = current.x + dx * speed
+      let newY = current.y + dy * speed
+
+      if (newX < arena.bounds.left || newX > arena.bounds.right) {
+        dx = -dx
+        newX = current.x + dx * speed
+      }
+
+      if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
+        dy = -dy
+        newY = current.y + dy * speed
+      }
+
+      enemy.positions = [
+        { x: newX, y: newY },
+        { x: current.x, y: current.y }
+      ]
+    },
+    'zombie': () => {
+      const speed = 0.5
+
+      const currentPosition = enemy.positions[0]
+      const dx = player.position.x - currentPosition.x
+      const dy = player.position.y - currentPosition.y
+      const dist = Math.hypot(dx, dy)
+
+      enemy.positions = [{
+        x: currentPosition.x + (dx / dist) * speed,
+        y: currentPosition.y + (dy / dist) * speed,
+      }]
+    },
+  }[enemy.type]()))
 }
 
 function checkColisions() {
