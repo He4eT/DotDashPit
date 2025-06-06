@@ -12,7 +12,6 @@ function TIC() {
 
 /* Stages */
 
-/** @type Record<string, () => void> */
 const gameStages = {
   mainMenu,
   gameover,
@@ -26,19 +25,19 @@ let currentStage = 'mainMenu'
 
 /**
  * @typedef {{ x: number, y: number }} Point
- *
- * @typedef {{
- *   top: number,
- *   right: number,
- *   bottom: number,
- *   left: number,
- * }} Bounds
  */
 
 /**
+ * @typedef {{ x: number, y: number }} Point
+ *
  * @typedef {{
  *   screenPosition: Point,
- *   bounds: Bounds,
+ *   bounds: {
+ *     top: number,
+ *     right: number,
+ *     bottom: number,
+ *     left: number,
+ *   },
  *   spriteHalfSize: number,
  *   wave: number,
  * }} Arena
@@ -67,7 +66,6 @@ let arena = {
  *   position: Point,
  * }} Player
  */
-
 /** @type {Player} */
 let player = {
   sprite: 64,
@@ -78,29 +76,25 @@ let player = {
   },
 }
 
-const enemyTypes = ['point', 'fidget', 'bounce', 'zombie']
-
 /**
  * @typedef {{
- *   letter: string,
  *   type: keyof typeof enemyBehaviors,
- *   dangerZone: number,
  *   positions: Point[],
+ *   letter: string,
+ *   dangerZone: number,
  * }} Enemy
  */
-
 /** @type {Enemy[]} */
 let enemies = []
 
 /**
  * @typedef {{
- *   type: 'laser' | 'nuke' | 'verticalLine' | 'horizontalLine' | 'detection',
+ *   type: keyof typeof effectHandlers
  *   from: Point,
  *   to: Point,
  *   frames: number[],
  * }} Effect
  */
-
 /** @type {Effect[]} */
 let effects = []
 
@@ -140,7 +134,7 @@ function gameplay() {
   handleMoves()
   handleMorse()
 
-  spawn()
+  spawnEnemies()
   moveEnemies()
 
   drawInterface()
@@ -149,6 +143,39 @@ function gameplay() {
   drawEnemies()
   drawPlayer()
 }
+
+/* Interface */
+
+function drawInterface() {
+  cls(0)
+}
+
+function drawSprite(spriteIndex, x, y) {
+  const colorkey = 0
+  const center = arenaToScreen({ x, y })
+
+  spr(
+    spriteIndex,
+    center.x - arena.spriteHalfSize,
+    center.y - arena.spriteHalfSize,
+    colorkey,
+  )
+}
+
+/* Arena */
+
+function drawArena() {
+  map(0, 0, 30, 15)
+}
+
+function arenaToScreen({ x, y }) {
+  return {
+    x: x + arena.screenPosition.x,
+    y: y + arena.screenPosition.y,
+  }
+}
+
+/* Player */
 
 function handleMoves() {
   player.speed = btn(BTN_A) ? 2 : 1
@@ -182,32 +209,60 @@ function handleMorse() {
   }
 }
 
-function destroyEnemiesByLetter(letter) {
-  const destructionEffects = [
-    ['laser', [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1]],
-    ['nuke', [7, 6, 5, 4, 3, 2]],
-    ['verticalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
-    ['horizontalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
-  ]
-
-  enemies
-    .filter((enemy) => enemy.letter === letter)
-    .forEach((enemy) => {
-      const [type, frames] = destructionEffects[rnd(0, 3)]
-      effects.unshift({
-        type,
-        frames,
-        from: player.position,
-        to: enemy.positions[0],
-      })
-    })
-
-  enemies = enemies.filter((enemy) => enemy.letter !== letter)
+function drawPlayer() {
+  drawSprite(player.sprite, player.position.x, player.position.y)
 }
 
 /* Enemies */
 
-function spawn() {
+const enemyBehaviors = {
+  point: () => {},
+  fidget: (enemy) => {},
+  bounce: (enemy) => {
+    const speed = 1
+    const current = enemy.positions[0]
+    const previous = enemy.positions[1]
+
+    const d = getDirection(previous, current)
+
+    let dx = d.x * speed
+    let dy = d.y * speed
+
+    let newX = current.x + dx
+    let newY = current.y + dy
+
+    if (newX < arena.bounds.left || newX > arena.bounds.right) {
+      dx = -dx
+      newX = current.x + dx
+    }
+
+    if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
+      dy = -dy
+      newY = current.y + dy
+    }
+
+    enemy.positions = [
+      { x: newX, y: newY },
+      { x: current.x, y: current.y },
+    ]
+  },
+  zombie: (enemy) => {
+    const speed = 0.5
+    const current = enemy.positions[0]
+    const target = player.position
+
+    const d = getDirection(current, target)
+
+    enemy.positions = [
+      {
+        x: current.x + d.x * speed,
+        y: current.y + d.y * speed,
+      },
+    ]
+  },
+}
+
+function spawnEnemies() {
   if (enemies.length > 0) {
     return
   }
@@ -261,55 +316,33 @@ function spawn() {
   })
 }
 
-const enemyBehaviors = {
-  point: () => {},
-  fidget: (enemy) => {},
-  bounce: (enemy) => {
-    const speed = 1
-    const current = enemy.positions[0]
-    const previous = enemy.positions[1]
-
-    const d = getDirection(previous, current)
-
-    let dx = d.x * speed
-    let dy = d.y * speed
-
-    let newX = current.x + dx
-    let newY = current.y + dy
-
-    if (newX < arena.bounds.left || newX > arena.bounds.right) {
-      dx = -dx
-      newX = current.x + dx
-    }
-
-    if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
-      dy = -dy
-      newY = current.y + dy
-    }
-
-    enemy.positions = [
-      { x: newX, y: newY },
-      { x: current.x, y: current.y },
-    ]
-  },
-  zombie: (enemy) => {
-    const speed = 0.5
-    const current = enemy.positions[0]
-    const target = player.position
-
-    const d = getDirection(current, target)
-
-    enemy.positions = [
-      {
-        x: current.x + d.x * speed,
-        y: current.y + d.y * speed,
-      },
-    ]
-  },
-}
-
 function moveEnemies() {
   enemies.forEach((enemy) => enemyBehaviors[enemy.type](enemy))
+}
+
+function destroyEnemiesByLetter(letter) {
+  const destructionEffects = [
+    ['laser', [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1]],
+    ['nuke', [7, 6, 5, 4, 3, 2]],
+    ['verticalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
+    ['horizontalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
+  ]
+
+  enemies
+    .filter((enemy) => enemy.letter === letter)
+    .forEach((enemy) => {
+      const [type, frames] =
+        destructionEffects[rnd(0, destructionEffects.length - 1)]
+
+      effects.unshift({
+        type,
+        frames,
+        from: player.position,
+        to: enemy.positions[0],
+      })
+    })
+
+  enemies = enemies.filter((enemy) => enemy.letter !== letter)
 }
 
 function checkColisions() {
@@ -328,34 +361,13 @@ function checkColisions() {
   }
 }
 
-/* Draw */
-
-function arenaToScreen({ x, y }) {
-  return {
-    x: x + arena.screenPosition.x,
-    y: y + arena.screenPosition.y,
-  }
+function drawEnemies() {
+  enemies
+    .map((enemy) => [80, enemy.positions[0].x, enemy.positions[0].y])
+    .forEach((spriteData) => drawSprite(...spriteData))
 }
 
-function drawSprite(spriteIndex, x, y) {
-  const colorkey = 0
-  const center = arenaToScreen({ x, y })
-
-  spr(
-    spriteIndex,
-    center.x - arena.spriteHalfSize,
-    center.y - arena.spriteHalfSize,
-    colorkey,
-  )
-}
-
-function drawInterface() {
-  cls(0)
-}
-
-function drawArena() {
-  map(0, 0, 30, 15)
-}
+/* Effects */
 
 const effectHandlers = {
   laser: ({ from, to, frames }) => {
@@ -408,16 +420,6 @@ function drawFX() {
     .forEach((effect) => effectHandlers[effect.type](effect))
 
   effects = effects.filter(({ frames }) => frames.length > 0)
-}
-
-function drawEnemies() {
-  enemies
-    .map((enemy) => [80, enemy.positions[0].x, enemy.positions[0].y])
-    .forEach((spriteData) => drawSprite(...spriteData))
-}
-
-function drawPlayer() {
-  drawSprite(player.sprite, player.position.x, player.position.y)
 }
 
 /* Utils */
