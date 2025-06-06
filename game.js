@@ -6,50 +6,100 @@
 // version: 0.1
 // script:  js
 
-// api:     https://github.com/nesbox/TIC-80/wiki/API
-
 function TIC() {
   gameStages[currentStage]()
 }
 
-// Stages
+/* Stages */
 
+/** @type Record<string, () => void> */
 const gameStages = {
   mainMenu,
   gameover,
   gameplay,
 }
 
+/** @type {keyof typeof gameStages} */
 let currentStage = 'mainMenu'
 
-// State
+/* State */
 
+/**
+ * @typedef {{ x: number, y: number }} Point
+ *
+ * @typedef {{
+ *   top: number,
+ *   right: number,
+ *   bottom: number,
+ *   left: number,
+ * }} Bounds
+ */
+
+/**
+ * @typedef {{
+ *   screenPosition: Point,
+ *   bounds: Bounds,
+ *   spriteHalfSize: number,
+ * }} Arena
+ */
+
+/** @type {Arena} */
 let arena = {
-  // Screen position
-  x: 7,
-  y: 7,
-  // Bounds
-  top: 0,
-  right: 225,
-  bottom: 89,
-  left: 0,
-  // Sprite size
-  spriteSize: 7,
+  screenPosition: {
+    x: 7,
+    y: 7,
+  },
+  bounds: {
+    top: 0,
+    right: 225,
+    bottom: 89,
+    left: 0,
+  },
   spriteHalfSize: 3,
 }
 
+/**
+ * @typedef {{
+ *   sprite: number,
+ *   speed: number,
+ *   position: Point,
+ * }} Player
+ */
+
+/** @type {Player} */
 let player = {
   sprite: 64,
   speed: 1,
-  x: 0,
-  y: 0,
+  position: {
+    x: 0,
+    y: 0,
+  },
 }
 
+/**
+ * @typedef {{
+ *   type: 'zombie',
+ *   dangerZone: number,
+ *   positions: Point[],
+ * }} Enemy
+ */
+
+/** @type {Enemy[]} */
 let enemies = []
 
+/**
+ * @typedef {{
+ *   type: 'laser' | 'nuke' | 'verticalLine' | 'horizontalLine' | 'detection',
+ *   from: Point,
+ *   to: Point,
+ *   frames: number[],
+ * }} Effect
+ */
+
+/** @type {Effect[]} */
 let effects = []
 
-// Main Menu
+/* Main Menu */
 
 function mainMenu() {
   if ([BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)) {
@@ -65,7 +115,7 @@ function mainMenu() {
   print(instruction, 12, 30, 4)
 }
 
-// Gameover
+/* Gameover */
 
 function gameover() {
   cls(0)
@@ -77,7 +127,7 @@ function gameover() {
   print(title, 12, 12, 10, false, 2)
 }
 
-// Gameplay
+/* Gameplay */
 
 function gameplay() {
   checkColisions()
@@ -86,7 +136,7 @@ function gameplay() {
   handleMorse()
 
   spawn()
-  // moveEnemies()
+  /* moveEnemies() */
 
   drawInterface()
   drawArena()
@@ -107,9 +157,16 @@ function handleMoves() {
   if (btn(BTN_D)) dy += 1
 
   const norm = player.speed / ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
+  const { bounds } = arena
 
-  player.x = Math.max(arena.left, Math.min(arena.right, player.x + dx * norm))
-  player.y = Math.max(arena.top, Math.min(arena.bottom, player.y + dy * norm))
+  player.position.x = Math.max(
+    bounds.left,
+    Math.min(bounds.right, player.position.x + dx * norm),
+  )
+  player.position.y = Math.max(
+    bounds.top,
+    Math.min(bounds.bottom, player.position.y + dy * norm),
+  )
 }
 
 function handleMorse() {
@@ -119,14 +176,8 @@ function handleMorse() {
     if (enemies.length > 0) {
       effects.unshift({
         type: 'laser',
-        from: {
-          x: player.x,
-          y: player.y,
-        },
-        to: {
-          x: enemies[0].x[0],
-          y: enemies[0].y[0],
-        },
+        from: player.position,
+        to: enemies[0].positions[0],
         frames: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
       })
       enemies.shift()
@@ -135,14 +186,18 @@ function handleMorse() {
   }
 }
 
-// Enemies
+/* Enemies */
 
 function spawn() {
   if (enemies.length === 0) {
     enemies = [
       {
-        x: [Math.random() * arena.right],
-        y: [Math.random() * arena.bottom],
+        positions: [
+          {
+            x: Math.random() * arena.bounds.right,
+            y: Math.random() * arena.bounds.bottom,
+          },
+        ],
         type: 'zombie',
         dangerZone: 8,
       },
@@ -152,10 +207,7 @@ function spawn() {
       effects.unshift({
         type: 'detection',
         from: {},
-        to: {
-          x: enemy.x[0],
-          y: enemy.y[0],
-        },
+        to: enemy.positions[0],
         frames: Array(5).fill(4),
       })
     })
@@ -167,7 +219,10 @@ function checkColisions() {
     enemies
       .map((enemy) => [
         enemy,
-        Math.hypot(player.x - enemy.x[0], player.y - enemy.y[0]),
+        Math.hypot(
+          player.position.x - enemy.positions[0].x,
+          player.position.y - enemy.positions[0].y,
+        ),
       ])
       .some(([enemy, distance]) => distance < enemy.dangerZone)
   ) {
@@ -175,12 +230,12 @@ function checkColisions() {
   }
 }
 
-// Draw
+/* Draw */
 
 function arenaToScreen({ x, y }) {
   return {
-    x: x + arena.x,
-    y: y + arena.y,
+    x: x + arena.screenPosition.x,
+    y: y + arena.screenPosition.y,
   }
 }
 
@@ -214,7 +269,7 @@ function drawFX() {
     .forEach((effect) =>
       ({
         laser: ({ from, to, frames }) => {
-          // [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1]
+          /* [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1] */
           const color = frames.shift()
           line(from.x, from.y, to.x, to.y, color)
           circ(from.x, from.y, frames.length / 3, color)
@@ -222,22 +277,22 @@ function drawFX() {
           circb(to.x, to.y, frames.length, color + 3)
         },
         nuke: ({ to, frames }) => {
-          // [6, 5, 4, 3, 2]
+          /* [6, 5, 4, 3, 2] */
           const color = frames.shift()
           circ(to.x, to.y, Math.pow(frames.length, 5), color)
         },
         verticalLine: ({ to, frames }) => {
-          // [4, 5, 6, 7, 7, 6, 5, 4]
+          /* [4, 5, 6, 7, 7, 6, 5, 4] */
           const color = frames.shift()
           rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
         },
         horizontalLine: ({ to, frames }) => {
-          // [4, 5, 6, 7, 7, 6, 5, 4]
+          /* [4, 5, 6, 7, 7, 6, 5, 4] */
           const color = frames.shift()
           rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
         },
         detection: ({ to, frames }) => {
-          // Array(5).fill(4)]
+          /* Array(5).fill(4)] */
           const color = frames.shift()
           const w = arena.spriteHalfSize
           const d = frames.length + 2 * w
@@ -264,27 +319,27 @@ function drawFX() {
 
 function drawEnemies() {
   enemies
-    .map((enemy) => [80, enemy.x[0], enemy.y[0]])
+    .map((enemy) => [80, enemy.positions[0].x, enemy.positions[0].y])
     .forEach((spriteData) => drawSprite(...spriteData))
 }
 
 function drawPlayer() {
-  drawSprite(player.sprite, player.x, player.y)
+  drawSprite(player.sprite, player.position.x, player.position.y)
 }
 
-// Utils
+/* Utils */
 
 function rnd(from, to) {
   return Math.floor(Math.random() * (to - from + 1)) + from
 }
 
-// Constants
+/* Constants */
 
-// Screen
+/* Screen */
 const SCREEN_W = 240
 const SCREEN_H = 136
 
-// Buttons
+/* Buttons */
 const [BTN_U, BTN_D, BTN_L, BTN_R, BTN_A, BTN_B, BTN_X, BTN_Y] = [
   ...Array(8).keys(),
 ]
