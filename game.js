@@ -78,6 +78,7 @@ let player = {
 
 /**
  * @typedef {{
+ *   letter: string,
  *   type: 'zombie',
  *   dangerZone: number,
  *   positions: Point[],
@@ -173,17 +174,31 @@ function handleMorse() {
   player.sprite = btn(BTN_B) ? 65 : 64
 
   if (btnp(BTN_B, 100, 100)) {
-    if (enemies.length > 0) {
-      effects.unshift({
-        type: 'laser',
-        from: player.position,
-        to: enemies[0].positions[0],
-        frames: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
-      })
-      enemies.shift()
-      trace(enemies.length)
-    }
+    destroyEnemiesByLetter('e')
   }
+}
+
+function destroyEnemiesByLetter(letter) {
+  const destructionEffects = [
+    ['laser', [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1]],
+    ['nuke', [7, 6, 5, 4, 3, 2]],
+    ['verticalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
+    ['horizontalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
+  ]
+
+  enemies
+    .filter((enemy) => enemy.letter === letter)
+    .forEach((enemy) => {
+      const [type, frames] = destructionEffects[rnd(0, 3)]
+      effects.unshift({
+        type,
+        frames,
+        from: player.position,
+        to: enemy.positions[0],
+      })
+    })
+
+  enemies = enemies.filter((enemy) => enemy.letter !== letter)
 }
 
 /* Enemies */
@@ -199,6 +214,7 @@ function spawn() {
           },
         ],
         type: 'zombie',
+        letter: 'e',
         dangerZone: 8,
       },
     ]
@@ -206,7 +222,6 @@ function spawn() {
     enemies.forEach((enemy) => {
       effects.unshift({
         type: 'detection',
-        from: {},
         to: enemy.positions[0],
         frames: Array(5).fill(4),
       })
@@ -263,13 +278,12 @@ function drawFX() {
   effects
     .map((effect) => ({
       ...effect,
-      from: arenaToScreen(effect.from),
-      to: arenaToScreen(effect.to),
+      from: arenaToScreen(effect.from ?? {}),
+      to: arenaToScreen(effect.to ?? {}),
     }))
     .forEach((effect) =>
       ({
         laser: ({ from, to, frames }) => {
-          /* [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1] */
           const color = frames.shift()
           line(from.x, from.y, to.x, to.y, color)
           circ(from.x, from.y, frames.length / 3, color)
@@ -277,22 +291,18 @@ function drawFX() {
           circb(to.x, to.y, frames.length, color + 3)
         },
         nuke: ({ to, frames }) => {
-          /* [6, 5, 4, 3, 2] */
           const color = frames.shift()
           circ(to.x, to.y, Math.pow(frames.length, 5), color)
         },
         verticalLine: ({ to, frames }) => {
-          /* [4, 5, 6, 7, 7, 6, 5, 4] */
           const color = frames.shift()
           rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
         },
         horizontalLine: ({ to, frames }) => {
-          /* [4, 5, 6, 7, 7, 6, 5, 4] */
           const color = frames.shift()
           rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
         },
         detection: ({ to, frames }) => {
-          /* Array(5).fill(4)] */
           const color = frames.shift()
           const w = arena.spriteHalfSize
           const d = frames.length + 2 * w
