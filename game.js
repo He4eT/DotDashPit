@@ -118,7 +118,7 @@ function handleMorse() {
   if (btnp(BTN_B, 100, 100)) {
     if (enemies.length > 0) {
       effects.unshift({
-        type: 'verticalLine',
+        type: 'laser',
         from: {
           x: player.x,
           y: player.y,
@@ -127,7 +127,7 @@ function handleMorse() {
           x: enemies[0].x[0],
           y: enemies[0].y[0],
         },
-        frames: [4, 5, 6, 7, 7, 6, 5, 4],
+        frames: [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1],
       })
       enemies.shift()
       trace(enemies.length)
@@ -147,6 +147,18 @@ function spawn() {
         dangerZone: 8,
       },
     ]
+
+    enemies.forEach((enemy) => {
+      effects.unshift({
+        type: 'detection',
+        from: {},
+        to: {
+          x: enemy.x[0],
+          y: enemy.y[0],
+        },
+        frames: [...Array(5).fill(4)],
+      })
+    })
   }
 }
 
@@ -217,9 +229,30 @@ function drawFX() {
         verticalLine: ({ to, frames }) => {
           // [4, 5, 6, 7, 7, 6, 5, 4]
           const color = frames.shift()
-
           rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
         },
+        horizontalLine: ({ to, frames }) => {
+          // [4, 5, 6, 7, 7, 6, 5, 4]
+          const color = frames.shift()
+          rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
+        },
+        detection: ({ to, frames }) => {
+          const color = frames.shift()
+          const r = arena.spriteHalfSize
+          const d = frames.length + 2 * r
+
+          line(to.x - d, to.y - d, to.x - d + r, to.y - d + 0, color)
+          line(to.x - d, to.y - d, to.x - d + 0, to.y - d + r, color)
+
+          line(to.x + d, to.y - d, to.x + d - r, to.y - d + 0, color)
+          line(to.x + d, to.y - d, to.x + d - 0, to.y - d + r, color)
+
+          line(to.x + d, to.y + d, to.x + d - r, to.y + d + 0, color)
+          line(to.x + d, to.y + d, to.x + d - 0, to.y + d - r, color)
+
+          line(to.x - d, to.y + d, to.x - d + r, to.y + d + 0, color)
+          line(to.x - d, to.y + d, to.x - d + 0, to.y + d - r, color)
+        }
       })[effect.type](effect),
     )
 
