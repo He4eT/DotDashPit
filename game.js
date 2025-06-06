@@ -264,55 +264,54 @@ function spawn() {
 }
 
 function moveEnemies() {
-  enemies.forEach((enemy) => ({
-    'point': () => {},
-    'fidget': () => {},
-    'bounce': () => {
-      const speed = 1
-      const current = enemy.positions[0]
-      const previous = enemy.positions[1]
+  enemies.forEach((enemy) =>
+    ({
+      point: () => {},
+      fidget: () => {},
+      bounce: () => {
+        const speed = 1
+        const current = enemy.positions[0]
+        const previous = enemy.positions[1]
 
-      /**/
-      let dx = current.x - previous.x
-      let dy = current.y - previous.y
+        let d = getDirection(previous, current)
 
-      const length = Math.hypot(dx, dy) || 1
-      dx /= length
-      dy /= length
-      /**/
+        dx = d.x * speed
+        dy = d.y * speed
 
-      let newX = current.x + dx * speed
-      let newY = current.y + dy * speed
+        let newX = current.x + dx
+        let newY = current.y + dy
 
-      if (newX < arena.bounds.left || newX > arena.bounds.right) {
-        dx = -dx
-        newX = current.x + dx * speed
-      }
+        if (newX < arena.bounds.left || newX > arena.bounds.right) {
+          dx = -dx
+          newX = current.x + dx
+        }
 
-      if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
-        dy = -dy
-        newY = current.y + dy * speed
-      }
+        if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
+          dy = -dy
+          newY = current.y + dy
+        }
 
-      enemy.positions = [
-        { x: newX, y: newY },
-        { x: current.x, y: current.y }
-      ]
-    },
-    'zombie': () => {
-      const speed = 0.5
+        enemy.positions = [
+          { x: newX, y: newY },
+          { x: current.x, y: current.y },
+        ]
+      },
+      zombie: () => {
+        const speed = 0.5
+        const current = enemy.positions[0]
+        const target = player.position
 
-      const currentPosition = enemy.positions[0]
-      const dx = player.position.x - currentPosition.x
-      const dy = player.position.y - currentPosition.y
-      const dist = Math.hypot(dx, dy)
+        const d = getDirection(current, target)
 
-      enemy.positions = [{
-        x: currentPosition.x + (dx / dist) * speed,
-        y: currentPosition.y + (dy / dist) * speed,
-      }]
-    },
-  }[enemy.type]()))
+        enemy.positions = [
+          {
+            x: current.x + d.x * speed,
+            y: current.y + d.y * speed,
+          },
+        ]
+      },
+    })[enemy.type](),
+  )
 }
 
 function checkColisions() {
@@ -427,6 +426,17 @@ function drawPlayer() {
 
 function rnd(from, to) {
   return Math.floor(Math.random() * (to - from + 1)) + from
+}
+
+function getDirection(from, to) {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const distance = Math.hypot(dx, dy) || 1
+
+  return {
+    x: dx / distance,
+    y: dy / distance,
+  }
 }
 
 /* Constants */
