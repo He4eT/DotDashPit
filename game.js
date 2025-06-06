@@ -174,7 +174,42 @@ function drawPlayer() {
 
 const enemyBehaviors = {
   point: () => {},
-  fidget: (enemy) => {},
+  fidget: (enemy) => {
+    const speed = 0.5
+    const current = enemy.positions[0]
+    const previous = enemy.positions[1] || current
+
+    let d = getDirection(previous, current)
+
+    if (Math.random() < 0.05 || (d.x === 0 && d.y === 0)) {
+      const angle = Math.random() * 2 * Math.PI
+      d = {
+        x: Math.cos(angle),
+        y: Math.sin(angle),
+      }
+    }
+
+    let dx = d.x * speed
+    let dy = d.y * speed
+
+    let newX = current.x + dx
+    let newY = current.y + dy
+
+    if (newX < arena.bounds.left || newX > arena.bounds.right) {
+      dx = -dx
+      newX = current.x + dx
+    }
+
+    if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
+      dy = -dy
+      newY = current.y + dy
+    }
+
+    enemy.positions = [
+      { x: newX, y: newY },
+      { x: current.x, y: current.y },
+    ]
+  },
   bounce: (enemy) => {
     const speed = 1
     const current = enemy.positions[0]
