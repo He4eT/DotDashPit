@@ -287,23 +287,21 @@ function spawnEnemies() {
     return { x, y }
   }
 
-  enemies = Array(enemyCount)
-    .fill()
-    .map(() => {
-      const type = getType(arena.wave)
-      return {
-        type,
-        letter: 'e',
-        positions: [getSpawnPosition(), getSpawnPosition()],
-        dangerZone: getDangerZone(type),
-      }
-    })
+  enemies = arr(enemyCount).map(() => {
+    const type = getType(arena.wave)
+    return {
+      type,
+      letter: 'e',
+      positions: [getSpawnPosition(), getSpawnPosition()],
+      dangerZone: getDangerZone(type),
+    }
+  })
 
   enemies.forEach((enemy) => {
     effects.unshift({
       type: 'detection',
       to: enemy.positions[0],
-      frames: Array(10).fill(4),
+      frames: arr(10, 4),
     })
   })
 }
@@ -416,6 +414,15 @@ function drawFX() {
 
 /* Utils */
 
+function arr(n, filler) {
+  const result = []
+  for (let i = 0; i < n; i++) {
+    result.push(filler)
+  }
+
+  return result
+}
+
 function rnd(from, to) {
   return Math.floor(Math.random() * (to - from + 1)) + from
 }
@@ -438,9 +445,14 @@ const SCREEN_W = 240
 const SCREEN_H = 136
 
 /* Buttons */
-const [BTN_U, BTN_D, BTN_L, BTN_R, BTN_A, BTN_B, BTN_X, BTN_Y] = [
-  ...Array(8).keys(),
-]
+const BTN_U = 0;
+const BTN_D = 1;
+const BTN_L = 2;
+const BTN_R = 3;
+const BTN_A = 4;
+const BTN_B = 5;
+const BTN_X = 6;
+const BTN_Y = 7;
 
 /* Types */
 
