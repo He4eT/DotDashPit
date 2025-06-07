@@ -383,14 +383,14 @@ function drawLetters() {
     const d = getDirection(enemyPosition, player.position)
 
     const letterPos = {
-      x: enemyPosition.x - d.x * 12,
-      y: enemyPosition.y - d.y * 12,
+      x: enemyPosition.x - d.x * 18,
+      y: enemyPosition.y - d.y * 18,
     }
 
     const screenPos = arenaToScreen(letterPos)
 
-    drawSprite(1, letterPos.x, letterPos.y)
-    print(enemy.letter, screenPos.x - 2, screenPos.y - 2, 2, false, 1)
+    rect(screenPos.x - 7, screenPos.y - 7, 16, 16, 5)
+    print(enemy.letter, screenPos.x - 4, screenPos.y - 4, 2, false, 2)
   })
 }
 
