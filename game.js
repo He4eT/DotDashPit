@@ -44,8 +44,8 @@ let player = {
   sprite: 64,
   speed: 1,
   position: {
-    x: 0,
-    y: 0,
+    x: rnd(arena.bounds.left, arena.bounds.right),
+    y: rnd(arena.bounds.top, arena.bounds.bottom),
   },
 }
 
@@ -547,7 +547,7 @@ const BTN_Y = 7
 // 080:aaaaaaa0aaaaaaa0aa000aa0aa000aa0aa000aa0aaaaaaa0aaaaaaa000000000
 // 081:aaaaaaa0a00a00a0a00a00a0aaaaaaa0a00a00a0a00a00a0aaaaaaa000000000
 // 082:00a0a00000000000a0aaa0a000aaa000a0aaa0a00000000000a0a00000000000
-// 083:aa000aa0aaaaaaa00aaaaa000aa0aa000aaaaa00aaaaaaa0aa000aa000000000
+// 083:aa000aa0aaaaaaa00aaaaa000aaaaa000aaaaa00aaaaaaa0aa000aa000000000
 // </TILES>
 
 // <MAP>
@@ -583,3 +583,4 @@ const BTN_Y = 7
 // <PALETTE>
 // 000:000000002b36073642586e75657b8383949693a1a1ffffffb58900cb4b16dc322fd336826c71c4268bd22aa198859900
 // </PALETTE>
+
