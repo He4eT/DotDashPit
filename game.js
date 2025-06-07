@@ -276,11 +276,13 @@ function spawnEnemies() {
   }
 
   const getSpawnPosition = () => {
-    const minDistance = 50
+    const minDistance = 12 * arena.spriteHalfSize
+    const b = 4 * arena.spriteHalfSize
     let x, y, distance
+
     do {
-      x = rnd(arena.bounds.left, arena.bounds.right)
-      y = rnd(arena.bounds.top, arena.bounds.bottom)
+      x = rnd(arena.bounds.left + b, arena.bounds.right - b)
+      y = rnd(arena.bounds.top + b, arena.bounds.bottom - b)
       distance = Math.hypot(x - player.position.x, y - player.position.y)
     } while (distance < minDistance)
 
@@ -353,7 +355,16 @@ function checkColisions() {
 
 function drawEnemies() {
   enemies
-    .map((enemy) => [80, enemy.positions[0].x, enemy.positions[0].y])
+    .map((enemy) => [
+      {
+        point: 80,
+        fidget: 81,
+        bounce: 82,
+        zombie: 83,
+      }[enemy.type],
+      enemy.positions[0].x,
+      enemy.positions[0].y,
+    ])
     .forEach((spriteData) => drawSprite(...spriteData))
 }
 
@@ -445,14 +456,14 @@ const SCREEN_W = 240
 const SCREEN_H = 136
 
 /* Buttons */
-const BTN_U = 0;
-const BTN_D = 1;
-const BTN_L = 2;
-const BTN_R = 3;
-const BTN_A = 4;
-const BTN_B = 5;
-const BTN_X = 6;
-const BTN_Y = 7;
+const BTN_U = 0
+const BTN_D = 1
+const BTN_L = 2
+const BTN_R = 3
+const BTN_A = 4
+const BTN_B = 5
+const BTN_X = 6
+const BTN_Y = 7
 
 /* Types */
 
@@ -507,6 +518,9 @@ const BTN_Y = 7;
 // 064:8800088080000080008880000088800000888000800000808800088000000000
 // 065:0000000008808800080008000008000008000800088088000000000000000000
 // 080:aaaaaaa0aaaaaaa0aa000aa0aa000aa0aa000aa0aaaaaaa0aaaaaaa000000000
+// 081:aaaaaaa0a00a00a0a00a00a0aaaaaaa0a00a00a0a00a00a0aaaaaaa000000000
+// 082:00a0a00000000000a0aaa0a000aaa000a0aaa0a00000000000a0a00000000000
+// 083:aa000aa0aaaaaaa00aaaaa000aa0aa000aaaaa00aaaaaaa0aa000aa000000000
 // </TILES>
 
 // <MAP>
