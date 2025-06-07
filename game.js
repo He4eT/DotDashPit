@@ -13,13 +13,13 @@ function TIC() {
 /* Stages */
 
 const gameStages = {
-  startscreen,
-  gameplay,
-  gameover,
+  startScreen,
+  gameScreen,
+  gameoverScreen,
 }
 
 /** @type {keyof typeof gameStages} */
-let currentStage = 'startscreen'
+let currentStage = 'startScreen'
 
 /* State */
 
@@ -57,39 +57,47 @@ let effects = []
 
 /* Main Menu */
 
-function startscreen() {
-  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
-    currentStage = 'gameplay'
-  }
-
-  cls(0)
-
+function startScreen() {
+  cls()
   const title = 'Morse Pit'
   print(title, 12, 12, 3, false, 2)
 
   const instruction = 'Press any key to start'
   print(instruction, 12, 30, 4)
+
+  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
+    currentStage = 'gameScreen'
+  }
 }
 
 /* Gameover */
 
-function gameover() {
-  cls(0)
+function gameoverScreen() {
+  if (effects.length > 0) {
+    drawFX()
+    drawEnemies()
+    drawPlayer()
+  } else {
+    const title = 'Game Over'
+    print(title, 12, SCREEN_H - 24, 10, false, 2)
 
-  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
-    reset()
+    if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
+      reset()
+    }
   }
+}
 
-  drawEnemies()
-  drawPlayer()
-
-  const title = 'Game Over'
-  print(title, 12, SCREEN_H - 24, 10, false, 2)
+function gameover () {
+  effects = [{
+    type: 'flash',
+    frames: '7777777777654321000000000000000000'.split(''),
+  }]
+  currentStage = 'gameoverScreen'
 }
 
 /* Gameplay */
 
-function gameplay() {
+function gameScreen() {
   checkColisions()
 
   handleMoves()
@@ -362,7 +370,7 @@ function checkColisions() {
       ])
       .some(([enemy, distance]) => distance < enemy.dangerZone)
   ) {
-    currentStage = 'gameover'
+    gameover()
   }
 }
 
@@ -401,6 +409,10 @@ function drawLetters() {
 /* Effects */
 
 const effectHandlers = {
+  flash: ({ frames }) => {
+    const color = frames.shift()
+    cls(color)
+  },
   laser: ({ from, to, frames }) => {
     const color = frames.shift()
     line(from.x, from.y, to.x, to.y, color)
