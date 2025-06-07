@@ -99,6 +99,7 @@ function gameplay() {
   drawFX()
   drawEnemies()
   drawPlayer()
+  drawLetters()
 }
 
 /* Interface */
@@ -376,6 +377,23 @@ function drawEnemies() {
     .forEach((spriteData) => drawSprite(...spriteData))
 }
 
+function drawLetters() {
+  enemies.forEach((enemy) => {
+    const enemyPosition = enemy.positions[0]
+    const d = getDirection(enemyPosition, player.position)
+
+    const letterPos = {
+      x: enemyPosition.x - d.x * 12,
+      y: enemyPosition.y - d.y * 12,
+    }
+
+    const screenPos = arenaToScreen(letterPos)
+
+    drawSprite(1, letterPos.x, letterPos.y)
+    print(enemy.letter, screenPos.x - 2, screenPos.y - 2, 2, false, 1)
+  })
+}
+
 /* Effects */
 
 const effectHandlers = {
@@ -512,8 +530,9 @@ const BTN_Y = 7
  */
 
 // <TILES>
-// 001:1111110012222100123321001233210012222100111111000000000000000000
-// 002:1111111112222221123333211233332112222221111111110000000000000000
+// 001:5555555055555550555555505555555055555550555555505555555000000000
+// 002:1111110012222100123321001233210012222100111111000000000000000000
+// 003:1111111112222221123333211233332112222221111111110000000000000000
 // 016:0000000000000000000000000000000000000000000001110000012200000123
 // 017:0000000000000000000000000000000000000000111111112222222233333333
 // 018:0000000000000000000000000000000000000000111000002210000032100000
