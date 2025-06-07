@@ -162,7 +162,8 @@ function handleMorse() {
   player.sprite = btn(BTN_B) ? 65 : 64
 
   if (btnp(BTN_B, 100, 100)) {
-    destroyEnemiesByLetter('e')
+    const letter = enemies[0].letter
+    destroyEnemiesByLetter(letter)
   }
 }
 
@@ -275,6 +276,11 @@ function spawnEnemies() {
     return 8
   }
 
+  const getRandomLetter = () => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    return alphabet[rnd(0, alphabet.length - 1)]
+  }
+
   const getSpawnPosition = () => {
     const minDistance = 12 * arena.spriteHalfSize
     const b = 4 * arena.spriteHalfSize
@@ -293,7 +299,7 @@ function spawnEnemies() {
     const type = getType(arena.wave)
     return {
       type,
-      letter: 'e',
+      letter: getRandomLetter(),
       positions: [getSpawnPosition(), getSpawnPosition()],
       dangerZone: getDangerZone(type),
     }
@@ -314,6 +320,8 @@ function moveEnemies() {
 
 function destroyEnemiesByLetter(letter) {
   const destructionEffects = [
+    ['laser', [1, 3, 5, 7, 7, 5, 3, 1]],
+    ['laser', [2, 4, 6, 6, 7, 6, 4, 2]],
     ['laser', [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1]],
     ['nuke', [7, 6, 5, 4, 3, 2]],
     ['verticalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
