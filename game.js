@@ -13,13 +13,13 @@ function TIC() {
 /* Stages */
 
 const gameStages = {
-  mainMenu,
-  gameover,
+  startscreen,
   gameplay,
+  gameover,
 }
 
 /** @type {keyof typeof gameStages} */
-let currentStage = 'mainMenu'
+let currentStage = 'startscreen'
 
 /* State */
 
@@ -57,8 +57,8 @@ let effects = []
 
 /* Main Menu */
 
-function mainMenu() {
-  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)) {
+function startscreen() {
+  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
     currentStage = 'gameplay'
   }
 
@@ -76,11 +76,15 @@ function mainMenu() {
 function gameover() {
   cls(0)
 
+  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
+    reset()
+  }
+
   drawEnemies()
   drawPlayer()
 
   const title = 'Game Over'
-  print(title, 12, 12, 10, false, 2)
+  print(title, 12, SCREEN_H - 24, 10, false, 2)
 }
 
 /* Gameplay */
