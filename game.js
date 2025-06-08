@@ -6,6 +6,41 @@
 // version: 0.1
 // script:  js
 
+let morseTable = {
+  '.-': 'A',
+  '-...': 'B',
+  '-.-.': 'C',
+  '-..': 'D',
+  '.': 'E',
+  '..-.': 'F',
+  '--.': 'G',
+  '....': 'H',
+  '..': 'I',
+  '.---': 'J',
+  '-.-': 'K',
+  '.-..': 'L',
+  '--': 'M',
+  '-.': 'N',
+  '---': 'O',
+  '.--.': 'P',
+  '--.-': 'Q',
+  '.-.': 'R',
+  '...': 'S',
+  '-': 'T',
+  '..-': 'U',
+  '...-': 'V',
+  '.--': 'W',
+  '-..-': 'X',
+  '-.--': 'Y',
+  '--..': 'Z',
+}
+
+let keyDownAt = 0
+let keyUpAt = 0
+let isKeyDown = false
+
+let morseBuffer = ''
+
 function TIC() {
   gameStages[currentStage]()
 }
@@ -65,7 +100,7 @@ function startScreen() {
   const instruction = 'Press any key to start'
   print(instruction, 12, 30, 4)
 
-  if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
+  if (anyKeyPressed()) {
     currentStage = 'gameScreen'
   }
 }
@@ -81,17 +116,19 @@ function gameoverScreen() {
     const title = 'Game Over'
     print(title, 12, SCREEN_H - 24, 10, false, 2)
 
-    if ([BTN_A, BTN_B, BTN_X, BTN_Y].map((b) => btnp(b)).some(Boolean)) {
+    if (anyKeyPressed()) {
       reset()
     }
   }
 }
 
-function gameover () {
-  effects = [{
-    type: 'flash',
-    frames: '7777777777654321000000000000000000'.split(''),
-  }]
+function gameover() {
+  effects = [
+    {
+      type: 'flash',
+      frames: '7777777777654321000000000000000000'.split(''),
+    },
+  ]
   currentStage = 'gameoverScreen'
 }
 
@@ -101,7 +138,7 @@ function gameScreen() {
   checkColisions()
 
   handleMoves()
-  handleMorse()
+  // handleMorse()
 
   spawnEnemies()
   moveEnemies()
@@ -112,6 +149,7 @@ function gameScreen() {
   drawEnemies()
   drawPlayer()
   drawLetters()
+  handleMorse()
 }
 
 /* Interface */
@@ -148,8 +186,6 @@ function arenaToScreen({ x, y }) {
 /* Player */
 
 function handleMoves() {
-  player.speed = btn(BTN_A) ? 2 : 1
-
   let dx = 0
   if (btn(BTN_L)) dx -= 1
   if (btn(BTN_R)) dx += 1
@@ -172,12 +208,55 @@ function handleMoves() {
 }
 
 function handleMorse() {
-  player.sprite = btn(BTN_B) ? 65 : 64
+  // Cheatcode
 
   if (btnp(BTN_B, 100, 100)) {
     const letter = enemies[0].letter
     destroyEnemiesByLetter(letter)
   }
+
+  // Morse part
+
+  const buttonPressed = btn(4)
+  // const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
+
+  player.sprite = buttonPressed ? 65 : 64
+  player.speed = buttonPressed ? 2 : 1
+
+  const now = time()
+  const dotDashThreshold = 200
+  const idleTimeout = 500
+
+  // Start
+  if (buttonPressed && !isKeyDown) {
+    isKeyDown = true
+    keyDownAt = now
+  }
+
+  // Release
+  if (!buttonPressed && isKeyDown) {
+    isKeyDown = false
+    keyUpAt = now
+    morseBuffer += keyUpAt - keyDownAt < dotDashThreshold ? '.' : '-'
+
+    effects.unshift({
+      type: 'detection',
+      frames: [8],
+      to: player.position,
+    })
+  }
+
+  // Flush by Timeout
+  if (!buttonPressed && morseBuffer.length > 0 && now - keyUpAt > idleTimeout) {
+    if (morseTable[morseBuffer]) {
+      destroyEnemiesByLetter(morseTable[morseBuffer])
+    }
+    morseBuffer = ''
+  }
+
+  // Debug
+  print('Current Code: ' + morseBuffer, 10, 100)
+  print('Current Code Length: ' + morseBuffer.length, 10, 106)
 }
 
 function drawPlayer() {
@@ -491,6 +570,15 @@ function getDirection(from, to) {
   }
 }
 
+function anyKeyPressed() {
+  for (let i = 0; i < 8; i++) {
+    if (btnp(i)) {
+      return true
+    }
+  }
+  return false
+}
+
 /* Constants */
 
 /* Screen */
@@ -560,6 +648,7 @@ const BTN_Y = 7
 // 050:3210000022100000111000000000000000000000000000000000000000000000
 // 064:8800088080000080008880000088800000888000800000808800088000000000
 // 065:0000000008808800080008000008000008000800088088000000000000000000
+// 066:8800088080000080000000000008000000000000800000808800088000000000
 // 080:aaaaaaa0aaaaaaa0aa000aa0aa000aa0aa000aa0aaaaaaa0aaaaaaa000000000
 // 081:aaaaaaa0a00a00a0a00a00a0aaaaaaa0a00a00a0a00a00a0aaaaaaa000000000
 // 082:00a0a00000000000a0aaa0a000aaa000a0aaa0a00000000000a0a00000000000
@@ -599,4 +688,3 @@ const BTN_Y = 7
 // <PALETTE>
 // 000:000000002b36073642586e75657b8383949693a1a1ffffffb58900cb4b16dc322fd336826c71c4268bd22aa198859900
 // </PALETTE>
-
