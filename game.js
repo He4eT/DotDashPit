@@ -35,12 +35,6 @@ let morseTable = {
   '--..': 'Z',
 }
 
-let keyDownAt = 0
-let keyUpAt = 0
-let isKeyDown = false
-
-let morseBuffer = ''
-
 function TIC() {
   gameStages[currentStage]()
 }
@@ -77,6 +71,12 @@ const arena = {
 /** @type {Player} */
 const player = {
   state: 'default',
+  key: {
+    buffer: '',
+    isDown: false,
+    downAt: 0,
+    upAt: 0,
+  },
   position: {
     x: rnd(arena.bounds.left, arena.bounds.right),
     y: rnd(arena.bounds.top, arena.bounds.bottom),
@@ -233,30 +233,28 @@ function handleMorse() {
   const buttonPressed = btn(4)
   // const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
 
-  // player.sprite = buttonPressed ? 65 : 64
-  // player.speed = buttonPressed ? 2 : 1
-
+  const { key } = player
   const now = time()
   const dotDashThreshold = 200
   const idleTimeout = 500
 
   // Start
-  if (buttonPressed && !isKeyDown) {
-    isKeyDown = true
-    keyDownAt = now
+  if (buttonPressed && !key.isDown) {
+    key.isDown = true
+    key.downAt = now
   }
 
-  if (buttonPressed && isKeyDown) {
-    const dash = now - keyDownAt > dotDashThreshold
+  if (buttonPressed && key.isDown) {
+    const dash = now - key.downAt > dotDashThreshold
     player.state = dash ? 'dash' : 'dot'
   }
 
   // Release
-  if (!buttonPressed && isKeyDown) {
+  if (!buttonPressed && key.isDown) {
     player.state = 'default'
-    isKeyDown = false
-    keyUpAt = now
-    morseBuffer += keyUpAt - keyDownAt < dotDashThreshold ? '.' : '-'
+    key.isDown = false
+    key.upAt = now
+    key.buffer += key.upAt - key.downAt < dotDashThreshold ? '.' : '-'
 
     effects.unshift({
       type: 'detection',
@@ -266,16 +264,16 @@ function handleMorse() {
   }
 
   // Flush by Timeout
-  if (!buttonPressed && morseBuffer.length > 0 && now - keyUpAt > idleTimeout) {
-    if (morseTable[morseBuffer]) {
-      destroyEnemiesByLetter(morseTable[morseBuffer])
+  if (!buttonPressed && key.buffer.length > 0 && now - key.upAt > idleTimeout) {
+    if (morseTable[key.buffer]) {
+      destroyEnemiesByLetter(morseTable[key.buffer])
     }
-    morseBuffer = ''
+    key.buffer = ''
   }
 
   // Debug
-  print('Current Code: ' + morseBuffer, 10, 100)
-  print('Current Code Length: ' + morseBuffer.length, 10, 106)
+  print('Current Code: ' + key.buffer, 10, 100)
+  print('Current Code Length: ' + key.buffer.length, 10, 106)
 }
 
 function drawPlayer() {
@@ -641,6 +639,12 @@ const BTN_Y = 7
  *
  * @typedef {{
  *   state: keyof typeof playerStates,
+ *   key: {
+ *     buffer: string,
+ *     isDown: boolean,
+ *     downAt: number,
+ *     upAt: number,
+ *   },
  *   position: Point,
  * }} Player
  *
