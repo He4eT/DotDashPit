@@ -66,6 +66,7 @@ const arena = {
   },
   spriteHalfSize: 3,
   wave: 0,
+  waveSeed: 0,
 }
 
 /** @type {Player} */
@@ -220,6 +221,15 @@ function handleMoves() {
   )
 }
 
+function playMorseKey(seed) {
+  const bySeed = (from, to) => Math.floor(seed * (to - from + 1)) + from
+
+  const note = bySeed(57, 72)
+  const volume = bySeed(8, 10)
+
+  sfx(4, note, 4, 0, volume, 0);
+}
+
 function handleMorse() {
   const DOT_DASH_THRESHOLD = 200
   const IDLE_TIMEOUT = 500
@@ -239,6 +249,7 @@ function handleMorse() {
   if (buttonPressed && key.isDown) {
     const dash = now - key.downAt > DOT_DASH_THRESHOLD
     player.state = dash ? 'dash' : 'dot'
+    playMorseKey(arena.waveSeed)
   }
 
   // Release
@@ -370,6 +381,8 @@ function spawnEnemies() {
   }
 
   arena.wave += 1
+  arena.waveSeed = (Math.sin(arena.wave * 91.17) * 10000) % 1;
+
 
   const enemyCount = 1 + Math.floor(arena.wave / 2)
 
@@ -627,6 +640,7 @@ const BTN_Y = 7
  *   },
  *   spriteHalfSize: number,
  *   wave: number,
+ *   waveSeed: number,
  * }} Arena
  *
  * @typedef {{
