@@ -59,7 +59,7 @@ let currentStage = 'startScreen'
 /* State */
 
 /** @type {Arena} */
-let arena = {
+const arena = {
   screenPosition: {
     x: 7,
     y: 7,
@@ -75,12 +75,26 @@ let arena = {
 }
 
 /** @type {Player} */
-let player = {
-  sprite: 64,
-  speed: 1,
+const player = {
+  state: 'default',
   position: {
     x: rnd(arena.bounds.left, arena.bounds.right),
     y: rnd(arena.bounds.top, arena.bounds.bottom),
+  },
+}
+
+const playerStates = {
+  default: {
+    speed: 1,
+    sprite: 64,
+  },
+  dot: {
+    speed: 1.5,
+    sprite: 65,
+  },
+  dash: {
+    speed: 2,
+    sprite: 66,
   },
 }
 
@@ -194,7 +208,9 @@ function handleMoves() {
   if (btn(BTN_U)) dy -= 1
   if (btn(BTN_D)) dy += 1
 
-  const norm = player.speed / ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
+  const { speed } = playerStates[player.state]
+
+  const norm = speed / ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
   const { bounds } = arena
 
   player.position.x = Math.max(
@@ -220,8 +236,8 @@ function handleMorse() {
   const buttonPressed = btn(4)
   // const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
 
-  player.sprite = buttonPressed ? 65 : 64
-  player.speed = buttonPressed ? 2 : 1
+  // player.sprite = buttonPressed ? 65 : 64
+  // player.speed = buttonPressed ? 2 : 1
 
   const now = time()
   const dotDashThreshold = 200
@@ -233,8 +249,14 @@ function handleMorse() {
     keyDownAt = now
   }
 
+  if (buttonPressed && isKeyDown) {
+    const dash = now - keyDownAt > dotDashThreshold
+    player.state = dash ? 'dash' : 'dot'
+  }
+
   // Release
   if (!buttonPressed && isKeyDown) {
+    player.state = 'default'
     isKeyDown = false
     keyUpAt = now
     morseBuffer += keyUpAt - keyDownAt < dotDashThreshold ? '.' : '-'
@@ -260,7 +282,8 @@ function handleMorse() {
 }
 
 function drawPlayer() {
-  drawSprite(player.sprite, player.position.x, player.position.y)
+  const { sprite } = playerStates[player.state]
+  drawSprite(sprite, player.position.x, player.position.y)
 }
 
 /* Enemies */
@@ -465,7 +488,7 @@ function drawEnemies() {
       enemy.positions[0].x,
       enemy.positions[0].y,
     ])
-    .forEach((spriteData) => drawSprite(...spriteData))
+    .forEach(([sprite, x, y]) => drawSprite(sprite, x, y))
 }
 
 function drawLetters() {
@@ -613,8 +636,7 @@ const BTN_Y = 7
  * }} Arena
  *
  * @typedef {{
- *   sprite: number,
- *   speed: number,
+ *   state: keyof typeof playerStates,
  *   position: Point,
  * }} Player
  *
@@ -647,8 +669,8 @@ const BTN_Y = 7
 // 049:3333333322222222111111110000000000000000000000000000000000000000
 // 050:3210000022100000111000000000000000000000000000000000000000000000
 // 064:8800088080000080008880000088800000888000800000808800088000000000
-// 065:0000000008808800080008000008000008000800088088000000000000000000
-// 066:8800088080000080000000000008000000000000800000808800088000000000
+// 065:8800088080000080000000000008000000000000800000808800088000000000
+// 066:0000000008808800080008000008000008000800088088000000000000000000
 // 080:aaaaaaa0aaaaaaa0aa000aa0aa000aa0aa000aa0aaaaaaa0aaaaaaa000000000
 // 081:aaaaaaa0a00a00a0a00a00a0aaaaaaa0a00a00a0a00a00a0aaaaaaa000000000
 // 082:00a0a00000000000a0aaa0a000aaa000a0aaa0a00000000000a0a00000000000
@@ -688,3 +710,4 @@ const BTN_Y = 7
 // <PALETTE>
 // 000:000000002b36073642586e75657b8383949693a1a1ffffffb58900cb4b16dc322fd336826c71c4268bd22aa198859900
 // </PALETTE>
+
