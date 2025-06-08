@@ -86,15 +86,12 @@ const player = {
 const playerStates = {
   default: {
     speed: 1,
-    sprite: 64,
   },
   dot: {
     speed: 1.5,
-    sprite: 65,
   },
   dash: {
     speed: 2,
-    sprite: 66,
   },
 }
 
@@ -282,8 +279,15 @@ function handleMorse() {
 }
 
 function drawPlayer() {
-  const { sprite } = playerStates[player.state]
-  drawSprite(sprite, player.position.x, player.position.y)
+  drawSprite(
+    {
+      default: 64,
+      dot: 65,
+      dash: 66,
+    }[player.state],
+    player.position.x,
+    player.position.y,
+  )
 }
 
 /* Enemies */
@@ -710,4 +714,3 @@ const BTN_Y = 7
 // <PALETTE>
 // 000:000000002b36073642586e75657b8383949693a1a1ffffffb58900cb4b16dc322fd336826c71c4268bd22aa198859900
 // </PALETTE>
-
