@@ -221,31 +221,23 @@ function handleMoves() {
 }
 
 function handleMorse() {
-  // Cheatcode
-
-  if (btnp(BTN_B, 100, 100)) {
-    const letter = enemies[0].letter
-    destroyEnemiesByLetter(letter)
-  }
-
-  // Morse part
-
-  const buttonPressed = btn(4)
-  // const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
+  const DOT_DASH_THRESHOLD = 200
+  const IDLE_TIMEOUT = 500
 
   const { key } = player
   const now = time()
-  const dotDashThreshold = 200
-  const idleTimeout = 500
 
-  // Start
+  const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
+
+  // Down
   if (buttonPressed && !key.isDown) {
     key.isDown = true
     key.downAt = now
   }
 
+  // Hold
   if (buttonPressed && key.isDown) {
-    const dash = now - key.downAt > dotDashThreshold
+    const dash = now - key.downAt > DOT_DASH_THRESHOLD
     player.state = dash ? 'dash' : 'dot'
   }
 
@@ -254,7 +246,7 @@ function handleMorse() {
     player.state = 'default'
     key.isDown = false
     key.upAt = now
-    key.buffer += key.upAt - key.downAt < dotDashThreshold ? '.' : '-'
+    key.buffer += key.upAt - key.downAt < DOT_DASH_THRESHOLD ? '.' : '-'
 
     effects.unshift({
       type: 'detection',
@@ -263,17 +255,17 @@ function handleMorse() {
     })
   }
 
-  // Flush by Timeout
-  if (!buttonPressed && key.buffer.length > 0 && now - key.upAt > idleTimeout) {
+  // Flush
+  if (
+    !buttonPressed &&
+    key.buffer.length > 0 &&
+    now - key.upAt > IDLE_TIMEOUT
+  ) {
     if (morseTable[key.buffer]) {
       destroyEnemiesByLetter(morseTable[key.buffer])
     }
     key.buffer = ''
   }
-
-  // Debug
-  print('Current Code: ' + key.buffer, 10, 100)
-  print('Current Code Length: ' + key.buffer.length, 10, 106)
 }
 
 function drawPlayer() {
