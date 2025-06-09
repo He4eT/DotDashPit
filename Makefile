@@ -1,4 +1,4 @@
-game_name := MorsePit
+game_name := DotDashPit
 
 game_src := ./game.js
 build_dir := ./build

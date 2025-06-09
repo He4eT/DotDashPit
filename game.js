@@ -1,10 +1,12 @@
-// title:   MorsePit
-// author:  He4eT@oddsquat.org
+// title:   DotDashPit
 // desc:    Defeat endless waves of enemies using Morse code.
-// site:    https://github.com/He4eT/MorsePit
+// author:  He4eT
+// site:    https://github.com/He4eT/DotDashPit
 // license: MIT License
-// version: 0.1
+// input:   gamepad
+// saveid:  DotDashPit
 // script:  js
+// version: 0.1
 
 const morseCode = [
   ['A', ' .-   '],
