@@ -6,34 +6,39 @@
 // version: 0.1
 // script:  js
 
-let morseTable = {
-  '.-': 'A',
-  '-...': 'B',
-  '-.-.': 'C',
-  '-..': 'D',
-  '.': 'E',
-  '..-.': 'F',
-  '--.': 'G',
-  '....': 'H',
-  '..': 'I',
-  '.---': 'J',
-  '-.-': 'K',
-  '.-..': 'L',
-  '--': 'M',
-  '-.': 'N',
-  '---': 'O',
-  '.--.': 'P',
-  '--.-': 'Q',
-  '.-.': 'R',
-  '...': 'S',
-  '-': 'T',
-  '..-': 'U',
-  '...-': 'V',
-  '.--': 'W',
-  '-..-': 'X',
-  '-.--': 'Y',
-  '--..': 'Z',
-}
+const morseCode = [
+  ['A', ' .-   '],
+  ['B', ' -... '],
+  ['C', ' -.-. '],
+  ['D', ' -..  '],
+  ['E', ' .    '],
+  ['F', ' ..-. '],
+  ['G', ' --.  '],
+  ['H', ' .... '],
+  ['I', ' ..   '],
+  ['J', ' .--- '],
+  ['K', ' -.-  '],
+  ['L', ' .-.. '],
+  ['M', ' --   '],
+  ['N', ' -.   '],
+  ['O', ' ---  '],
+  ['P', ' .--. '],
+  ['Q', ' --.- '],
+  ['R', ' .-.  '],
+  ['S', ' ...  '],
+  ['T', ' -    '],
+  ['U', ' ..-  '],
+  ['V', ' ...- '],
+  ['W', ' .--  '],
+  ['X', ' -..- '],
+  ['Y', ' -.-- '],
+  ['Z', ' --.. '],
+].map(([letter, code]) => [letter, code.trim()])
+
+const letterToMorse = Object.fromEntries(morseCode)
+const morseToLetter = Object.fromEntries(
+  morseCode.map((pair) => pair.reverse()),
+)
 
 function TIC() {
   gameStages[currentStage]()
@@ -226,7 +231,7 @@ function playMorseKey(seed) {
   const note = bySeed(57, 72)
   const volume = bySeed(8, 10)
 
-  sfx(4, note, 4, 0, volume, 0);
+  sfx(4, note, 4, 0, volume, 0)
 }
 
 function handleMorse() {
@@ -271,8 +276,8 @@ function handleMorse() {
     key.buffer.length > 0 &&
     now - key.upAt > IDLE_TIMEOUT
   ) {
-    if (morseTable[key.buffer]) {
-      destroyEnemiesByLetter(morseTable[key.buffer])
+    if (morseToLetter[key.buffer]) {
+      destroyEnemiesByLetter(morseToLetter[key.buffer])
     }
     key.buffer = ''
   }
@@ -380,8 +385,7 @@ function spawnEnemies() {
   }
 
   arena.wave += 1
-  arena.waveSeed = (Math.sin(arena.wave * 91.17) * 10000) % 1;
-
+  arena.waveSeed = (Math.sin(arena.wave * 91.17) * 10000) % 1
 
   const enemyCount = 1 + Math.floor(arena.wave / 2)
 
