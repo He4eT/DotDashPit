@@ -149,9 +149,6 @@ function gameover() {
 function gameScreen() {
   checkColisions()
 
-  handleMoves()
-  // handleMorse()
-
   spawnEnemies()
   moveEnemies()
 
@@ -161,6 +158,8 @@ function gameScreen() {
   drawEnemies()
   drawPlayer()
   drawLetters()
+
+  handleMoves()
   handleMorse()
 }
 
@@ -247,8 +246,8 @@ function handleMorse() {
 
   // Hold
   if (buttonPressed && key.isDown) {
-    const dash = now - key.downAt > DOT_DASH_THRESHOLD
-    player.state = dash ? 'dash' : 'dot'
+    const isDash = now - key.downAt > DOT_DASH_THRESHOLD
+    player.state = isDash ? 'dash' : 'dot'
     playMorseKey(arena.waveSeed)
   }
 
