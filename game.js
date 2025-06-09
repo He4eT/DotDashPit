@@ -37,25 +37,26 @@ const morseCode = [
   ['Z', ' --.. '],
 ].map(([letter, code]) => [letter, code.trim()])
 
+const alphabet = morseCode.map(([letter]) => letter)
 const letterToMorse = Object.fromEntries(morseCode)
 const morseToLetter = Object.fromEntries(
   morseCode.map((pair) => pair.reverse()),
 )
 
+/* Screens */
+
 function TIC() {
-  gameStages[currentStage]()
+  gameScreens[currentScreen]()
 }
 
-/* Stages */
+/** @type {keyof typeof gameScreens} */
+let currentScreen = 'startScreen'
 
-const gameStages = {
+const gameScreens = {
   startScreen,
   gameScreen,
   gameoverScreen,
 }
-
-/** @type {keyof typeof gameStages} */
-let currentStage = 'startScreen'
 
 /* State */
 
@@ -113,6 +114,7 @@ let effects = []
 
 function startScreen() {
   cls()
+
   const title = 'Morse Pit'
   print(title, 12, 12, 3, false, 2)
 
@@ -120,7 +122,7 @@ function startScreen() {
   print(instruction, 12, 30, 4)
 
   if (anyKeyPressed()) {
-    currentStage = 'gameScreen'
+    currentScreen = 'gameScreen'
   }
 }
 
@@ -148,16 +150,19 @@ function gameover() {
       frames: '7777777777654321000000000000000000'.split(''),
     },
   ]
-  currentStage = 'gameoverScreen'
+  currentScreen = 'gameoverScreen'
 }
 
 /* Gameplay */
 
 function gameScreen() {
   checkColisions()
-
   spawnEnemies()
+
+  handleMoves()
   moveEnemies()
+
+  handleMorse()
 
   drawInterface()
   drawArena()
@@ -165,9 +170,6 @@ function gameScreen() {
   drawEnemies()
   drawPlayer()
   drawLetters()
-
-  handleMoves()
-  handleMorse()
 }
 
 /* Interface */
@@ -176,29 +178,10 @@ function drawInterface() {
   cls(0)
 }
 
-function drawSprite(spriteIndex, x, y) {
-  const colorkey = 0
-  const center = arenaToScreen({ x, y })
-
-  spr(
-    spriteIndex,
-    center.x - arena.spriteHalfSize,
-    center.y - arena.spriteHalfSize,
-    colorkey,
-  )
-}
-
 /* Arena */
 
 function drawArena() {
   map(0, 0, 30, 15)
-}
-
-function arenaToScreen({ x, y }) {
-  return {
-    x: x + arena.screenPosition.x,
-    y: y + arena.screenPosition.y,
-  }
 }
 
 /* Player */
@@ -212,19 +195,20 @@ function handleMoves() {
   if (btn(BTN_U)) dy -= 1
   if (btn(BTN_D)) dy += 1
 
-  const { speed } = playerStates[player.state]
+  const norm =
+    playerStates[player.state].speed /
+    ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
 
-  const norm = speed / ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
-  const { bounds } = arena
-
-  player.position.x = Math.max(
-    bounds.left,
-    Math.min(bounds.right, player.position.x + dx * norm),
-  )
-  player.position.y = Math.max(
-    bounds.top,
-    Math.min(bounds.bottom, player.position.y + dy * norm),
-  )
+  player.position = {
+    x: Math.max(
+      arena.bounds.left,
+      Math.min(arena.bounds.right, player.position.x + dx * norm),
+    ),
+    y: Math.max(
+      arena.bounds.top,
+      Math.min(arena.bounds.bottom, player.position.y + dy * norm),
+    ),
+  }
 }
 
 function playMorseKey(seed) {
@@ -245,34 +229,34 @@ function handleMorse() {
 
   const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
 
-  // Down
+  /* Down */
   if (buttonPressed && !key.isDown) {
     key.isDown = true
     key.downAt = now
   }
 
-  // Hold
+  /* Hold */
   if (buttonPressed && key.isDown) {
     const isDash = now - key.downAt > DOT_DASH_THRESHOLD
     player.state = isDash ? 'dash' : 'dot'
     playMorseKey(arena.waveSeed)
   }
 
-  // Release
+  /* Release */
   if (!buttonPressed && key.isDown) {
     player.state = 'default'
     key.isDown = false
     key.upAt = now
     key.buffer += key.upAt - key.downAt < DOT_DASH_THRESHOLD ? '.' : '-'
 
-    effects.unshift({
+    effects.push({
       type: 'detection',
       frames: [8],
       to: player.position,
     })
   }
 
-  // Flush
+  /* Flush */
   if (
     !buttonPressed &&
     key.buffer.length > 0 &&
@@ -403,11 +387,6 @@ function spawnEnemies() {
     return 8
   }
 
-  const getRandomLetter = () => {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    return alphabet[rnd(0, alphabet.length - 1)]
-  }
-
   const getSpawnPosition = () => {
     const minDistance = 12 * arena.spriteHalfSize
     const b = 4 * arena.spriteHalfSize
@@ -426,14 +405,14 @@ function spawnEnemies() {
     const type = getType(arena.wave)
     return {
       type,
-      letter: getRandomLetter(),
+      letter: alphabet[rnd(0, alphabet.length - 1)],
       positions: [getSpawnPosition(), getSpawnPosition()],
       dangerZone: getDangerZone(type),
     }
   })
 
   enemies.forEach((enemy) => {
-    effects.unshift({
+    effects.push({
       type: 'detection',
       to: enemy.positions[0],
       frames: arr(10, 4),
@@ -461,7 +440,7 @@ function destroyEnemiesByLetter(letter) {
       const [type, frames] =
         destructionEffects[rnd(0, destructionEffects.length - 1)]
 
-      effects.unshift({
+      effects.push({
         type,
         frames,
         from: player.position,
@@ -515,7 +494,8 @@ function drawLetters() {
 
     const screenPos = arenaToScreen(letterPos)
 
-    rect(screenPos.x - 7, screenPos.y - 7, 16, 16, 5)
+    rect(screenPos.x - 7, screenPos.y - 7, 16, 16, 4)
+    rectb(screenPos.x - 7, screenPos.y - 7, 16, 16, 3)
     print(enemy.letter, screenPos.x - 4, screenPos.y - 4, 2, false, 2)
   })
 }
@@ -586,7 +566,6 @@ function arr(n, filler) {
   for (let i = 0; i < n; i++) {
     result.push(filler)
   }
-
   return result
 }
 
@@ -603,6 +582,25 @@ function getDirection(from, to) {
     x: dx / distance,
     y: dy / distance,
   }
+}
+
+function arenaToScreen ({ x, y }) {
+  return {
+    x: x + arena.screenPosition.x,
+    y: y + arena.screenPosition.y,
+  }
+}
+
+function drawSprite(spriteIndex, x, y) {
+  const colorkey = 0
+  const center = arenaToScreen({ x, y })
+
+  spr(
+    spriteIndex,
+    center.x - arena.spriteHalfSize,
+    center.y - arena.spriteHalfSize,
+    colorkey,
+  )
 }
 
 function anyKeyPressed() {
