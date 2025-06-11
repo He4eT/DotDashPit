@@ -497,6 +497,25 @@ function drawLetters() {
     rect(screenPos.x - 7, screenPos.y - 7, 16, 16, 4)
     rectb(screenPos.x - 7, screenPos.y - 7, 16, 16, 3)
     print(enemy.letter, screenPos.x - 4, screenPos.y - 4, 2, false, 2)
+
+    drawHint(enemy.letter, screenPos.x - 7, screenPos.y + 9)
+  })
+}
+
+function drawHint(letter, x, y) {
+  const code = letterToMorse[letter].split('')
+  const l = code.reduce((acc, c) => acc + (c === '-' ? 4 : 2), 0)
+  let offset = x + (8 - Math.floor((l - 1) / 2)) - 1
+
+  rect(x, y, 16, 2, 3)
+  code.forEach((c) => {
+    if (c === '-') {
+      rect(offset, y, 3, 1, 2)
+      offset += 4
+    } else {
+      rect(offset, y, 1, 1, 2)
+      offset += 2
+    }
   })
 }
 
@@ -584,10 +603,10 @@ function getDirection(from, to) {
   }
 }
 
-function arenaToScreen ({ x, y }) {
+function arenaToScreen({ x, y }) {
   return {
-    x: x + arena.screenPosition.x,
-    y: y + arena.screenPosition.y,
+    x: Math.floor(x + arena.screenPosition.x),
+    y: Math.floor(y + arena.screenPosition.y),
   }
 }
 
