@@ -495,23 +495,28 @@ function drawLetters() {
       getDistance(player.position, enemy.positions[0]) <
       enemy.dangerZone * 3
     ) {
-      drawHint(enemy.letter, screenPos.x - 7, screenPos.y + 9)
+      const hintWidth = 16
+      const hintPosition = {
+        x: screenPos.x - 7,
+        y: screenPos.y + 9,
+      }
+      rect(hintPosition.x, hintPosition.y, hintWidth, 2, 3)
+      drawMorse(enemy.letter, hintPosition.x, hintPosition.y, 2, hintWidth)
     }
   })
 }
 
-function drawHint(letter, x, y) {
+function drawMorse(letter, x, y, color, width) {
   const code = letterToMorse[letter].split('')
   const l = code.reduce((acc, c) => acc + (c === '-' ? 4 : 2), 0)
-  let offset = x + (8 - Math.floor((l - 1) / 2)) - 1
+  let offset = x + 1 + (width ? width / 2 - Math.floor((l - 1) / 2) - 1 : 0)
 
-  rect(x, y, 16, 2, 3)
   code.forEach((c) => {
     if (c === '-') {
-      rect(offset, y, 3, 1, 2)
+      rect(offset, y, 3, 1, color)
       offset += 4
     } else {
-      rect(offset, y, 1, 1, 2)
+      rect(offset, y, 1, 1, color)
       offset += 2
     }
   })
