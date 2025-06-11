@@ -491,7 +491,12 @@ function drawLetters() {
     rectb(screenPos.x - 7, screenPos.y - 7, 16, 16, 3)
     print(enemy.letter, screenPos.x - 4, screenPos.y - 4, 2, false, 2)
 
-    drawHint(enemy.letter, screenPos.x - 7, screenPos.y + 9)
+    if (
+      getDistance(player.position, enemy.positions[0]) <
+      enemy.dangerZone * 3
+    ) {
+      drawHint(enemy.letter, screenPos.x - 7, screenPos.y + 9)
+    }
   })
 }
 
