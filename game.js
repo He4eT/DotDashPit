@@ -156,7 +156,7 @@ function gameover() {
 /* Gameplay */
 
 function gameScreen() {
-  checkColisions()
+  checkCollisions()
   spawnEnemies()
 
   handleMoves()
@@ -395,7 +395,7 @@ function spawnEnemies() {
     do {
       x = rnd(arena.bounds.left + b, arena.bounds.right - b)
       y = rnd(arena.bounds.top + b, arena.bounds.bottom - b)
-      distance = Math.hypot(x - player.position.x, y - player.position.y)
+      distance = getDistance({ x, y }, player.position)
     } while (distance < minDistance)
 
     return { x, y }
@@ -451,18 +451,11 @@ function destroyEnemiesByLetter(letter) {
   enemies = enemies.filter((enemy) => enemy.letter !== letter)
 }
 
-function checkColisions() {
-  if (
-    enemies
-      .map((enemy) => [
-        enemy,
-        Math.hypot(
-          player.position.x - enemy.positions[0].x,
-          player.position.y - enemy.positions[0].y,
-        ),
-      ])
-      .some(([enemy, distance]) => distance < enemy.dangerZone)
-  ) {
+function checkCollisions() {
+  const collide = (enemy) =>
+    getDistance(player.position, enemy.positions[0]) < enemy.dangerZone
+
+  if (enemies.some(collide)) {
     gameover()
   }
 }
@@ -590,6 +583,10 @@ function arr(n, filler) {
 
 function rnd(from, to) {
   return Math.floor(Math.random() * (to - from + 1)) + from
+}
+
+function getDistance(from, to) {
+  return Math.hypot(from.x - to.x, from.y - to.y)
 }
 
 function getDirection(from, to) {
