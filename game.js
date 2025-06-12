@@ -81,6 +81,7 @@ const arena = {
 const player = {
   state: 'default',
   key: {
+    history: '',
     buffer: '',
     isDown: false,
     downAt: 0,
@@ -182,8 +183,10 @@ function drawArena() {
 /* Interface */
 
 function drawInterface() {
-  print('0', 145, 121, 4)
   drawMorse(player.key.buffer, 102, 123, 15, 36)
+
+  print('0', 145, 121, 6)
+  print(player.key.history.padStart('13'), 18, 121, 6, true)
 }
 
 /* Player */
@@ -265,9 +268,14 @@ function handleMorse() {
     now - key.upAt > IDLE_TIMEOUT
   ) {
     if (morseToLetter[key.buffer]) {
-      destroyEnemiesByLetter(morseToLetter[key.buffer])
+      const letter = morseToLetter[key.buffer]
+      destroyEnemiesByLetter(letter)
+      key.history += letter
+    } else {
+      key.history += ' '
     }
     key.buffer = ''
+    key.history = key.history.slice(-13)
   }
 }
 
@@ -678,6 +686,7 @@ const BTN_Y = 7
  * @typedef {{
  *   state: keyof typeof playerStates,
  *   key: {
+ *     history: string,
  *     buffer: string,
  *     isDown: boolean,
  *     downAt: number,
