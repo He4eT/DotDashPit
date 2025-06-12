@@ -80,6 +80,7 @@ const arena = {
 /** @type {Player} */
 const player = {
   state: 'default',
+  score: 0,
   key: {
     history: '',
     buffer: '',
@@ -185,7 +186,7 @@ function drawArena() {
 function drawInterface() {
   drawMorse(player.key.buffer, 102, 123, 15, 36)
 
-  print('0', 145, 121, 6)
+  print(player.score, 145, 121, 6)
   print(player.key.history.padStart('13'), 18, 121, 6, true)
 }
 
@@ -415,6 +416,7 @@ function spawnEnemies() {
     const type = getType(arena.wave)
     return {
       type,
+      value: 100,
       letter: alphabet[rnd(0, alphabet.length - 1)],
       positions: [getSpawnPosition(), getSpawnPosition()],
       dangerZone: getDangerZone(type),
@@ -447,6 +449,7 @@ function destroyEnemiesByLetter(letter) {
   enemies
     .filter((enemy) => enemy.letter === letter)
     .forEach((enemy) => {
+      player.score += enemy.value
       const [type, frames] =
         destructionEffects[rnd(0, destructionEffects.length - 1)]
 
@@ -685,6 +688,7 @@ const BTN_Y = 7
  *
  * @typedef {{
  *   state: keyof typeof playerStates,
+ *   score: number,
  *   key: {
  *     history: string,
  *     buffer: string,
@@ -700,6 +704,7 @@ const BTN_Y = 7
  *   positions: Point[],
  *   letter: string,
  *   dangerZone: number,
+ *   value: number,
  * }} Enemy
  *
  * @typedef {{
