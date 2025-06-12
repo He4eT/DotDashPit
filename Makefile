@@ -1,6 +1,7 @@
 game_name := DotDashPit
 
 game_src := ./game.js
+cover_src := ./cover.png
 build_dir := ./build
 
 tic_cmd := tic80 --skip --fs './'
@@ -23,6 +24,9 @@ export_png:
 	${tic_cmd} --cli \
 		--cmd 'load ${game_src} & save ${build_dir}/${game_name}.png & exit'
 
+import_cover:
+	${tic_cmd} --cli \
+		--cmd 'load ${game_src} & import screen ${cover_src} & exit'
 release:
 	@make cleanup
 	@make export_tic
