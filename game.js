@@ -232,6 +232,51 @@ const enemyTypes = {
 /** @type {Effect[]} */
 let effects = []
 
+const effectHandlers = {
+  flash: ({ frames }) => {
+    const color = frames.shift()
+    cls(color)
+  },
+  laser: ({ from, to, frames }) => {
+    const color = frames.shift()
+    line(from.x, from.y, to.x, to.y, color)
+    circ(from.x, from.y, frames.length / 3, color)
+    circ(to.x, to.y, frames.length / 2, color)
+    circb(to.x, to.y, frames.length, color + 3)
+  },
+  nuke: ({ to, frames }) => {
+    const color = frames.shift()
+    circ(to.x, to.y, Math.pow(frames.length, 5), color)
+  },
+  verticalLine: ({ to, frames }) => {
+    const color = frames.shift()
+    rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
+  },
+  horizontalLine: ({ to, frames }) => {
+    const color = frames.shift()
+    rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
+  },
+  detection: ({ to, frames }) => {
+    const color = frames.shift()
+    const w = arena.spriteHalfSize
+    const d = frames.length + 2 * w
+    const corners = [
+      [+1, +1],
+      [+1, -1],
+      [-1, +1],
+      [-1, -1],
+    ]
+
+    corners.forEach(([dx, dy]) => {
+      const x = to.x + dx * d
+      const y = to.y + dy * d
+
+      line(x, y, x - dx * w, y, color)
+      line(x, y, x, y - dy * w, color)
+    })
+  },
+}
+
 /* Main Menu */
 
 function startScreen() {
@@ -308,6 +353,22 @@ function drawInterface() {
 
   print(player.key.history.padStart(HISTORY_LENGTH, ' '), 7, 118, 5, true)
   print(player.score.toString().padStart(14, ' '), 152, 125, 6, true)
+}
+
+function drawMorse(codeString, x, y, color, width) {
+  const code = codeString.slice(-7).split('')
+  const l = code.reduce((acc, c) => acc + (c === '-' ? 4 : 2), 0)
+  let offset = x + 1 + (width ? width / 2 - Math.floor((l - 1) / 2) - 1 : 0)
+
+  code.forEach((c) => {
+    if (c === '-') {
+      rect(offset, y, 3, 1, color)
+      offset += 4
+    } else {
+      rect(offset, y, 1, 1, color)
+      offset += 2
+    }
+  })
 }
 
 /* Player */
@@ -463,7 +524,9 @@ function spawnEnemies() {
 }
 
 function moveEnemies() {
-  enemies.forEach((enemy) => enemyTypes[enemy.type].behaviour(enemy))
+  enemies.forEach((enemy) => {
+    enemyTypes[enemy.type].behaviour(enemy)
+  })
 }
 
 function destroyEnemiesByLetter(letter) {
@@ -545,68 +608,7 @@ function drawLetters() {
   })
 }
 
-function drawMorse(codeString, x, y, color, width) {
-  const code = codeString.slice(-7).split('')
-  const l = code.reduce((acc, c) => acc + (c === '-' ? 4 : 2), 0)
-  let offset = x + 1 + (width ? width / 2 - Math.floor((l - 1) / 2) - 1 : 0)
-
-  code.forEach((c) => {
-    if (c === '-') {
-      rect(offset, y, 3, 1, color)
-      offset += 4
-    } else {
-      rect(offset, y, 1, 1, color)
-      offset += 2
-    }
-  })
-}
-
 /* Effects */
-
-const effectHandlers = {
-  flash: ({ frames }) => {
-    const color = frames.shift()
-    cls(color)
-  },
-  laser: ({ from, to, frames }) => {
-    const color = frames.shift()
-    line(from.x, from.y, to.x, to.y, color)
-    circ(from.x, from.y, frames.length / 3, color)
-    circ(to.x, to.y, frames.length / 2, color)
-    circb(to.x, to.y, frames.length, color + 3)
-  },
-  nuke: ({ to, frames }) => {
-    const color = frames.shift()
-    circ(to.x, to.y, Math.pow(frames.length, 5), color)
-  },
-  verticalLine: ({ to, frames }) => {
-    const color = frames.shift()
-    rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
-  },
-  horizontalLine: ({ to, frames }) => {
-    const color = frames.shift()
-    rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
-  },
-  detection: ({ to, frames }) => {
-    const color = frames.shift()
-    const w = arena.spriteHalfSize
-    const d = frames.length + 2 * w
-    const corners = [
-      [+1, +1],
-      [+1, -1],
-      [-1, +1],
-      [-1, -1],
-    ]
-
-    corners.forEach(([dx, dy]) => {
-      const x = to.x + dx * d
-      const y = to.y + dy * d
-
-      line(x, y, x - dx * w, y, color)
-      line(x, y, x, y - dy * w, color)
-    })
-  },
-}
 
 function drawFX() {
   effects
