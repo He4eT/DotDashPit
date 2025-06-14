@@ -116,7 +116,7 @@ const playerStates = {
 /** @type {Enemy[]} */
 let enemies = []
 
-const enemyTypes = {
+const enemyBlueprints = {
   point: {
     sprite: 272,
     spawnDistance: 20,
@@ -232,7 +232,7 @@ const enemyTypes = {
 /** @type {Effect[]} */
 let effects = []
 
-const effectHandlers = {
+const effectRenderers = {
   flash: ({ frames }) => {
     const color = frames.shift()
     cls(color)
@@ -336,7 +336,7 @@ function gameScreen() {
   drawFX()
   drawEnemies()
   drawPlayer()
-  drawLetters()
+  drawEnemyLetters()
 }
 
 /* Arena */
@@ -484,12 +484,12 @@ function spawnEnemies() {
   const getType = (wave) => {
     if (wave <= 2) return 'point'
 
-    const availableTypes = Object.keys(enemyTypes)
+    const availableTypes = Object.keys(enemyBlueprints)
     return availableTypes[rnd(0, availableTypes.length - 1)]
   }
 
   const getSpawnPosition = (type) => {
-    const minDistance = enemyTypes[type].spawnDistance
+    const minDistance = enemyBlueprints[type].spawnDistance
     const b = 4 * arena.spriteHalfSize
     let x, y, distance
 
@@ -506,11 +506,11 @@ function spawnEnemies() {
     const type = getType(arena.wave)
     return {
       type,
-      speed: enemyTypes[type].maxSpeed * Math.random(),
-      value: enemyTypes[type].value,
+      speed: enemyBlueprints[type].maxSpeed * Math.random(),
+      value: enemyBlueprints[type].value,
       letter: alphabet[rnd(0, alphabet.length - 1)],
       positions: [getSpawnPosition(type), getSpawnPosition(type)],
-      dangerZone: enemyTypes[type].dangerZone,
+      dangerZone: enemyBlueprints[type].dangerZone,
     }
   })
 
@@ -525,7 +525,7 @@ function spawnEnemies() {
 
 function moveEnemies() {
   enemies.forEach((enemy) => {
-    enemyTypes[enemy.type].behaviour(enemy)
+    enemyBlueprints[enemy.type].behaviour(enemy)
   })
 }
 
@@ -569,24 +569,24 @@ function checkCollisions() {
 function drawEnemies() {
   enemies
     .map((enemy) => [
-      enemyTypes[enemy.type].sprite,
+      enemyBlueprints[enemy.type].sprite,
       enemy.positions[0].x,
       enemy.positions[0].y,
     ])
     .forEach(([sprite, x, y]) => drawSprite(sprite, x, y))
 }
 
-function drawLetters() {
+function drawEnemyLetters() {
   enemies.forEach((enemy) => {
     const enemyPosition = enemy.positions[0]
-    const d = getDirection(enemyPosition, player.position)
+    const d = getDirection(player.position, enemyPosition)
 
     const letterPos = {
-      x: enemyPosition.x - d.x * 18,
-      y: enemyPosition.y - d.y * 18,
+      x: enemyPosition.x + d.x * 18,
+      y: enemyPosition.y + d.y * 18,
     }
 
-    const screenPos = arenaToScreen(letterPos)
+    const screenPos = worldToScreen(letterPos)
 
     rect(screenPos.x - 7, screenPos.y - 7, 16, 16, 4)
     rectb(screenPos.x - 7, screenPos.y - 7, 16, 16, 3)
@@ -614,10 +614,10 @@ function drawFX() {
   effects
     .map((effect) => ({
       ...effect,
-      from: arenaToScreen(effect.from ?? {}),
-      to: arenaToScreen(effect.to ?? {}),
+      from: worldToScreen(effect.from ?? {}),
+      to: worldToScreen(effect.to ?? {}),
     }))
-    .forEach((effect) => effectHandlers[effect.type](effect))
+    .forEach((effect) => effectRenderers[effect.type](effect))
 
   effects = effects.filter(({ frames }) => frames.length > 0)
 }
@@ -651,7 +651,7 @@ function getDirection(from, to) {
   }
 }
 
-function arenaToScreen({ x, y }) {
+function worldToScreen({ x, y }) {
   return {
     x: Math.floor(x + arena.screenPosition.x),
     y: Math.floor(y + arena.screenPosition.y),
@@ -660,7 +660,7 @@ function arenaToScreen({ x, y }) {
 
 function drawSprite(spriteIndex, x, y) {
   const colorkey = 0
-  const center = arenaToScreen({ x, y })
+  const center = worldToScreen({ x, y })
 
   spr(
     spriteIndex,
@@ -727,7 +727,7 @@ const BTN_Y = 7
  * }} Player
  *
  * @typedef {{
- *   type: keyof typeof enemyTypes,
+ *   type: keyof typeof enemyBlueprints,
  *   speed: number,
  *   positions: Point[],
  *   letter: string,
@@ -736,7 +736,7 @@ const BTN_Y = 7
  * }} Enemy
  *
  * @typedef {{
- *   type: keyof typeof effectHandlers
+ *   type: keyof typeof effectRenderers
  *   from: Point,
  *   to: Point,
  *   frames: number[],
