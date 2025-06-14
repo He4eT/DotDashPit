@@ -132,41 +132,17 @@ const enemyBlueprints = {
     dangerZone: 8,
     value: 3,
     behaviour: (enemy) => {
-      const minSpeed = 0.4
-      const speed = Math.max(minSpeed, enemy.speed)
-      const current = enemy.positions[0]
-      const previous = enemy.positions[1] || current
-
-      let d = getDirection(previous, current)
-
-      if (Math.random() < 0.05 || (d.x === 0 && d.y === 0)) {
+      if (Math.random() < 0.05) {
         const angle = Math.random() * 2 * Math.PI
-        d = {
-          x: Math.cos(angle),
-          y: Math.sin(angle),
+        const current = enemy.positions[0]
+        const randomPrevious = {
+          x: current.x - Math.cos(angle),
+          y: current.y - Math.sin(angle),
         }
+        enemy.positions[1] = randomPrevious
       }
 
-      let dx = d.x * speed
-      let dy = d.y * speed
-
-      let newX = current.x + dx
-      let newY = current.y + dy
-
-      if (newX < arena.bounds.left || newX > arena.bounds.right) {
-        dx = -dx
-        newX = current.x + dx
-      }
-
-      if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
-        dy = -dy
-        newY = current.y + dy
-      }
-
-      enemy.positions = [
-        { x: newX, y: newY },
-        { x: current.x, y: current.y },
-      ]
+      enemyBlueprints.bounce.behaviour(enemy)
     },
   },
   bounce: {
@@ -176,7 +152,7 @@ const enemyBlueprints = {
     dangerZone: 8,
     value: 5,
     behaviour: (enemy) => {
-      const minSpeed = 0.7
+      const minSpeed = 0.6
       const speed = Math.max(minSpeed, enemy.speed)
       const current = enemy.positions[0]
       const previous = enemy.positions[1]
