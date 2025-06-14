@@ -166,9 +166,9 @@ function gameScreen() {
   spawnEnemies()
 
   handleMoves()
-  moveEnemies()
-
   handleMorse()
+
+  moveEnemies()
 
   drawArena()
   drawInterface()
@@ -190,8 +190,8 @@ function drawArena() {
 function drawInterface() {
   drawMorse(player.key.buffer, 100, 123, 15, 36)
 
-  print(player.key.history.padStart(HISTORY_LENGTH, ' '), 5, 118, 5, true)
-  print(player.score.toString().padStart(14, ' '), 152, 124, 6, true)
+  print(player.key.history.padStart(HISTORY_LENGTH, ' '), 7, 118, 5, true)
+  print(player.score.toString().padStart(14, ' '), 152, 125, 6, true)
 }
 
 /* Player */
