@@ -116,6 +116,119 @@ const playerStates = {
 /** @type {Enemy[]} */
 let enemies = []
 
+const enemyTypes = {
+  point: {
+    sprite: 272,
+    spawnDistance: 20,
+    maxSpeed: 0,
+    dangerZone: 8,
+    value: 1,
+    behaviour: () => {},
+  },
+  fidget: {
+    sprite: 273,
+    spawnDistance: 40,
+    maxSpeed: 0.9,
+    dangerZone: 8,
+    value: 3,
+    behaviour: (enemy) => {
+      const minSpeed = 0.4
+      const speed = Math.max(minSpeed, enemy.speed)
+      const current = enemy.positions[0]
+      const previous = enemy.positions[1] || current
+
+      let d = getDirection(previous, current)
+
+      if (Math.random() < 0.05 || (d.x === 0 && d.y === 0)) {
+        const angle = Math.random() * 2 * Math.PI
+        d = {
+          x: Math.cos(angle),
+          y: Math.sin(angle),
+        }
+      }
+
+      let dx = d.x * speed
+      let dy = d.y * speed
+
+      let newX = current.x + dx
+      let newY = current.y + dy
+
+      if (newX < arena.bounds.left || newX > arena.bounds.right) {
+        dx = -dx
+        newX = current.x + dx
+      }
+
+      if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
+        dy = -dy
+        newY = current.y + dy
+      }
+
+      enemy.positions = [
+        { x: newX, y: newY },
+        { x: current.x, y: current.y },
+      ]
+    },
+  },
+  bounce: {
+    sprite: 274,
+    spawnDistance: 100,
+    maxSpeed: 1.6,
+    dangerZone: 8,
+    value: 5,
+    behaviour: (enemy) => {
+      const minSpeed = 0.7
+      const speed = Math.max(minSpeed, enemy.speed)
+      const current = enemy.positions[0]
+      const previous = enemy.positions[1]
+
+      const d = getDirection(previous, current)
+
+      let dx = d.x * speed
+      let dy = d.y * speed
+
+      let newX = current.x + dx
+      let newY = current.y + dy
+
+      if (newX < arena.bounds.left || newX > arena.bounds.right) {
+        dx = -dx
+        newX = current.x + dx
+      }
+
+      if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
+        dy = -dy
+        newY = current.y + dy
+      }
+
+      enemy.positions = [
+        { x: newX, y: newY },
+        { x: current.x, y: current.y },
+      ]
+    },
+  },
+  zombie: {
+    sprite: 275,
+    spawnDistance: 80,
+    maxSpeed: 1,
+    dangerZone: 6,
+    value: 10,
+    behaviour: (enemy) => {
+      const minSpeed = 0.5
+      const speed = Math.max(minSpeed, enemy.speed)
+      const current = enemy.positions[0]
+      const target = player.position
+
+      const d = getDirection(current, target)
+
+      enemy.positions = [
+        {
+          x: current.x + d.x * speed,
+          y: current.y + d.y * speed,
+        },
+      ]
+    },
+  },
+}
+
 /** @type {Effect[]} */
 let effects = []
 
@@ -297,88 +410,6 @@ function drawPlayer() {
 
 /* Enemies */
 
-const enemyBehaviors = {
-  point: () => {},
-  fidget: (enemy) => {
-    const speed = 0.5
-    const current = enemy.positions[0]
-    const previous = enemy.positions[1] || current
-
-    let d = getDirection(previous, current)
-
-    if (Math.random() < 0.05 || (d.x === 0 && d.y === 0)) {
-      const angle = Math.random() * 2 * Math.PI
-      d = {
-        x: Math.cos(angle),
-        y: Math.sin(angle),
-      }
-    }
-
-    let dx = d.x * speed
-    let dy = d.y * speed
-
-    let newX = current.x + dx
-    let newY = current.y + dy
-
-    if (newX < arena.bounds.left || newX > arena.bounds.right) {
-      dx = -dx
-      newX = current.x + dx
-    }
-
-    if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
-      dy = -dy
-      newY = current.y + dy
-    }
-
-    enemy.positions = [
-      { x: newX, y: newY },
-      { x: current.x, y: current.y },
-    ]
-  },
-  bounce: (enemy) => {
-    const speed = 1
-    const current = enemy.positions[0]
-    const previous = enemy.positions[1]
-
-    const d = getDirection(previous, current)
-
-    let dx = d.x * speed
-    let dy = d.y * speed
-
-    let newX = current.x + dx
-    let newY = current.y + dy
-
-    if (newX < arena.bounds.left || newX > arena.bounds.right) {
-      dx = -dx
-      newX = current.x + dx
-    }
-
-    if (newY < arena.bounds.top || newY > arena.bounds.bottom) {
-      dy = -dy
-      newY = current.y + dy
-    }
-
-    enemy.positions = [
-      { x: newX, y: newY },
-      { x: current.x, y: current.y },
-    ]
-  },
-  zombie: (enemy) => {
-    const speed = 0.5
-    const current = enemy.positions[0]
-    const target = player.position
-
-    const d = getDirection(current, target)
-
-    enemy.positions = [
-      {
-        x: current.x + d.x * speed,
-        y: current.y + d.y * speed,
-      },
-    ]
-  },
-}
-
 function spawnEnemies() {
   if (enemies.length > 0) {
     return
@@ -392,17 +423,12 @@ function spawnEnemies() {
   const getType = (wave) => {
     if (wave <= 2) return 'point'
 
-    const enemyTypes = Object.keys(enemyBehaviors)
-    return enemyTypes[rnd(0, enemyTypes.length - 1)]
+    const availableTypes = Object.keys(enemyTypes)
+    return availableTypes[rnd(0, availableTypes.length - 1)]
   }
 
-  const getDangerZone = (type) => {
-    if (type === 'zombie') return 6
-    return 8
-  }
-
-  const getSpawnPosition = () => {
-    const minDistance = 12 * arena.spriteHalfSize
+  const getSpawnPosition = (type) => {
+    const minDistance = enemyTypes[type].spawnDistance
     const b = 4 * arena.spriteHalfSize
     let x, y, distance
 
@@ -419,10 +445,11 @@ function spawnEnemies() {
     const type = getType(arena.wave)
     return {
       type,
-      value: 100,
+      speed: enemyTypes[type].maxSpeed * Math.random(),
+      value: enemyTypes[type].value,
       letter: alphabet[rnd(0, alphabet.length - 1)],
-      positions: [getSpawnPosition(), getSpawnPosition()],
-      dangerZone: getDangerZone(type),
+      positions: [getSpawnPosition(type), getSpawnPosition(type)],
+      dangerZone: enemyTypes[type].dangerZone,
     }
   })
 
@@ -436,7 +463,7 @@ function spawnEnemies() {
 }
 
 function moveEnemies() {
-  enemies.forEach((enemy) => enemyBehaviors[enemy.type](enemy))
+  enemies.forEach((enemy) => enemyTypes[enemy.type].behaviour(enemy))
 }
 
 function destroyEnemiesByLetter(letter) {
@@ -479,12 +506,7 @@ function checkCollisions() {
 function drawEnemies() {
   enemies
     .map((enemy) => [
-      {
-        point: 80,
-        fidget: 81,
-        bounce: 82,
-        zombie: 83,
-      }[enemy.type],
+      enemyTypes[enemy.type].sprite,
       enemy.positions[0].x,
       enemy.positions[0].y,
     ])
@@ -703,7 +725,8 @@ const BTN_Y = 7
  * }} Player
  *
  * @typedef {{
- *   type: keyof typeof enemyBehaviors,
+ *   type: keyof typeof enemyTypes,
+ *   speed: number,
  *   positions: Point[],
  *   letter: string,
  *   dangerZone: number,
