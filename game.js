@@ -182,10 +182,23 @@ const enemyBlueprints = {
     },
   },
   zombie: {
+    sprite: 276,
+    spawnDistance: 80,
+    maxSpeed: 2,
+    dangerZone: 6,
+    value: 10,
+    behaviour: (enemy) => {
+      const laziness = 0.8
+      if (Math.random() > laziness) {
+        enemyBlueprints.follower.behaviour(enemy)
+      }
+    },
+  },
+  follower: {
     sprite: 275,
     spawnDistance: 80,
     maxSpeed: 1,
-    dangerZone: 6,
+    dangerZone: 3,
     value: 10,
     behaviour: (enemy) => {
       const minSpeed = 0.5
@@ -752,7 +765,8 @@ const BTN_Y = 7
 // 016:aaaaaaa0aaaaaaa0aa000aa0aa000aa0aa000aa0aaaaaaa0aaaaaaa000000000
 // 017:aaaaaaa0a00a00a0a00a00a0aaaaaaa0a00a00a0a00a00a0aaaaaaa000000000
 // 018:00a0a00000000000a0aaa0a000aaa000a0aaa0a00000000000a0a00000000000
-// 019:aa000aa0aaaaaaa00aaaaa000aaaaa000aaaaa00aaaaaaa0aa000aa000000000
+// 019:aa000aa0aa000aa000aaa00000aaa00000aaa000aa000aa0aa000aa000000000
+// 020:aa000aa0aaaaaaa00aaaaa000aaaaa000aaaaa00aaaaaaa0aa000aa000000000
 // </SPRITES>
 
 // <MAP>
