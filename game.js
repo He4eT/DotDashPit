@@ -11,6 +11,7 @@
 /* Config */
 
 const HISTORY_LENGTH = 14
+const HINT_DISTANCE = 30
 
 const morseCode = [
   ['A', ' .-   '],
@@ -581,21 +582,22 @@ function drawEnemyLetters() {
 
     const screenPos = worldToScreen(letterPos)
 
-    rectb(screenPos.x - 4, screenPos.y - 5, 10, 11, 4)
     rect(screenPos.x - 4, screenPos.y - 5, 10, 11, 2)
     font(enemy.letter, screenPos.x - 3, screenPos.y - 3, 0, 8, 8, true)
+    rectb(screenPos.x - 4, screenPos.y - 5, 10, 11, 4)
 
-    if (
-      getDistance(player.position, enemy.positions[0]) <
-      enemy.dangerZone * 3
-    ) {
-      const hintWidth = 16
-      const hintPosition = {
-        x: screenPos.x - 7,
-        y: screenPos.y + 9,
-      }
-      rect(hintPosition.x, hintPosition.y, hintWidth, 2, 3)
+    if (getDistance(player.position, enemy.positions[0]) < HINT_DISTANCE) {
       const code = letterToMorse[enemy.letter]
+
+      const hintWidth =
+        1 + code.split('').reduce((acc, x) => acc + { '.': 2, '-': 4 }[x], 0)
+
+      const hintPosition = {
+        x: screenPos.x - 4,
+        y: screenPos.y + 8,
+      }
+
+      rect(hintPosition.x, hintPosition.y - 1, Math.max(10, hintWidth), 3, 4)
       drawMorse(code, hintPosition.x, hintPosition.y, 2, hintWidth)
     }
   })
@@ -983,4 +985,3 @@ const BTN_Y = 7
 // <PALETTE>
 // 000:000000002b3607364221292c586e75657b83839496ffffffb58900cb4b16dc322fd336826c71c4268bd22aa198859900
 // </PALETTE>
-
