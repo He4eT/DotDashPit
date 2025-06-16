@@ -413,13 +413,13 @@ function moveEnemies() {
 
 function destroyEnemiesByLetter(letter) {
   const destructionEffects = [
-    ['laser', [1, 3, 5, 7, 7, 5, 3, 1]],
-    ['laser', [2, 4, 6, 6, 7, 6, 4, 2]],
-    ['laser', [1, 2, 3, 4, 7, 7, 7, 6, 5, 4, 3, 2, 1]],
-    ['nuke', [7, 6, 5, 4, 3, 2]],
-    ['verticalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
-    ['horizontalLine', [4, 5, 6, 7, 7, 6, 5, 4]],
-  ]
+    ['laser', '13577531'],
+    ['laser', '24667642'],
+    ['laser', '1234777654321'],
+    ['nuke', '765432'],
+    ['verticalLine', '45677654'],
+    ['horizontalLine', '45677654'],
+  ].map(([name, frames]) => [name, frames.split('')])
 
   enemies
     .filter((enemy) => enemy.letter === letter)
