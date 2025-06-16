@@ -256,7 +256,8 @@ const enemyBlueprints = {
     dangerZone: 8,
     value: 3,
     behaviour: (enemy) => {
-      if (Math.random() < 0.05) {
+      const jitter = 0.05
+      if (Math.random() < jitter) {
         const angle = Math.random() * 2 * Math.PI
         const current = enemy.positions[0]
         const randomPrevious = {
