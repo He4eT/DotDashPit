@@ -15,7 +15,22 @@ const IDLE_TIMEOUT = 500
 
 const HINT_DISTANCE = 30
 
-/* */
+/* Game Screens */
+
+/** @type {keyof typeof gameScreens} */
+let currentScreen = 'startScreen'
+
+const gameScreens = {
+  startScreen,
+  gameScreen,
+  gameoverScreen,
+}
+
+function TIC() {
+  gameScreens[currentScreen]()
+}
+
+/* Morse Code */
 
 const morseCode = [
   ['A', ' .-   '],
@@ -52,22 +67,33 @@ const morseToLetter = Object.fromEntries(
   morseCode.map((pair) => pair.reverse()),
 )
 
-/* Screens */
+function drawMorse(codeString, x, y, color, width) {
+  const code = codeString.slice(-1 * CODE_DISPLAY_W).split('')
+  const length = code.reduce((acc, c) => acc + (c === '-' ? 4 : 2), 0)
+  let offset =
+    x + 1 + (width ? width / 2 - Math.floor((length - 1) / 2) - 1 : 0)
 
-function TIC() {
-  gameScreens[currentScreen]()
+  code.forEach((c) => {
+    if (c === '-') {
+      rect(offset, y, 3, 1, color)
+      offset += 4
+    } else {
+      rect(offset, y, 1, 1, color)
+      offset += 2
+    }
+  })
 }
 
-/** @type {keyof typeof gameScreens} */
-let currentScreen = 'startScreen'
+function playMorseKey(seed) {
+  const bySeed = (from, to) => Math.floor(seed * (to - from + 1)) + from
 
-const gameScreens = {
-  startScreen,
-  gameScreen,
-  gameoverScreen,
+  const note = bySeed(57, 72)
+  const volume = bySeed(8, 10)
+
+  sfx(4, note, 4, 0, volume, 0)
 }
 
-/* State */
+/* Arena */
 
 /** @type {Arena} */
 const arena = {
@@ -85,6 +111,13 @@ const arena = {
   wave: 0,
   waveSeed: 0,
 }
+
+function drawArena() {
+  cls(0)
+  map(30, 0, 30, 17)
+}
+
+/* Player */
 
 /** @type {Player} */
 const player = {
@@ -117,6 +150,94 @@ const playerStates = {
     sprite: 258,
   },
 }
+
+function handleMoves() {
+  let dx = 0
+  if (btn(BTN_L)) dx -= 1
+  if (btn(BTN_R)) dx += 1
+
+  let dy = 0
+  if (btn(BTN_U)) dy -= 1
+  if (btn(BTN_D)) dy += 1
+
+  const norm =
+    playerStates[player.state].speed /
+    ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
+
+  const clamp = (value) => (min, max) => Math.max(min, Math.min(max, value))
+
+  player.position = {
+    x: clamp(player.position.x + dx * norm)(
+      arena.bounds.left,
+      arena.bounds.right,
+    ),
+    y: clamp(player.position.y + dy * norm)(
+      arena.bounds.top,
+      arena.bounds.bottom,
+    ),
+  }
+}
+
+function handleMorse() {
+  const { key } = player
+  const now = time()
+
+  const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
+
+  /* Down */
+  if (buttonPressed && !key.isDown) {
+    key.isDown = true
+    key.downAt = now
+  }
+
+  /* Hold */
+  if (buttonPressed && key.isDown) {
+    const isDash = now - key.downAt > DOT_DASH_THRESHOLD
+    player.state = isDash ? 'dash' : 'dot'
+    playMorseKey(arena.waveSeed)
+  }
+
+  /* Release */
+  if (!buttonPressed && key.isDown) {
+    player.state = 'default'
+    key.isDown = false
+    key.upAt = now
+    key.buffer += key.upAt - key.downAt < DOT_DASH_THRESHOLD ? '.' : '-'
+
+    effects.push({
+      type: 'detection',
+      frames: [15],
+      to: player.position,
+    })
+  }
+
+  /* Flush */
+  if (
+    !buttonPressed &&
+    key.buffer.length > 0 &&
+    now - key.upAt > IDLE_TIMEOUT
+  ) {
+    if (morseToLetter[key.buffer]) {
+      const letter = morseToLetter[key.buffer]
+      destroyEnemiesByLetter(letter)
+      key.history += letter
+    } else {
+      key.history += ' '
+    }
+    key.buffer = ''
+    key.history = key.history.slice(-1 * HISTORY_LENGTH)
+  }
+}
+
+function drawPlayer() {
+  drawSprite(
+    playerStates[player.state].sprite,
+    player.position.x,
+    player.position.y,
+  )
+}
+
+/* Enemies */
 
 /** @type {Enemy[]} */
 let enemies = []
@@ -153,7 +274,7 @@ const enemyBlueprints = {
   bounce: {
     sprite: 274,
     spawnDistance: 100,
-    maxSpeed: 1.6,
+    maxSpeed: 1.2,
     dangerZone: 8,
     value: 5,
     behaviour: (enemy) => {
@@ -222,268 +343,6 @@ const enemyBlueprints = {
     },
   },
 }
-
-/** @type {Effect[]} */
-let effects = []
-
-const effectRenderers = {
-  flash: ({ frames }) => {
-    const color = frames.shift()
-    cls(color)
-  },
-  laser: ({ from, to, frames }) => {
-    const color = frames.shift()
-    line(from.x, from.y, to.x, to.y, color)
-    circ(from.x, from.y, frames.length / 3, color)
-    circ(to.x, to.y, frames.length / 2, color)
-    circb(to.x, to.y, frames.length, color + 3)
-  },
-  nuke: ({ to, frames }) => {
-    const color = frames.shift()
-    circ(to.x, to.y, Math.pow(frames.length, 5), color)
-  },
-  verticalLine: ({ to, frames }) => {
-    const color = frames.shift()
-    rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
-  },
-  horizontalLine: ({ to, frames }) => {
-    const color = frames.shift()
-    rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
-  },
-  detection: ({ to, frames }) => {
-    const color = frames.shift()
-    const w = arena.spriteHalfSize
-    const d = frames.length + 2 * w
-    const corners = [
-      [+1, +1],
-      [+1, -1],
-      [-1, +1],
-      [-1, -1],
-    ]
-
-    corners.forEach(([dx, dy]) => {
-      const x = to.x + dx * d
-      const y = to.y + dy * d
-
-      line(x, y, x - dx * w, y, color)
-      line(x, y, x, y - dy * w, color)
-    })
-  },
-}
-
-function drawFX() {
-  effects
-    .map((effect) => ({
-      ...effect,
-      from: worldToScreen(effect.from ?? {}),
-      to: worldToScreen(effect.to ?? {}),
-    }))
-    .forEach((effect) => effectRenderers[effect.type](effect))
-
-  effects = effects.filter(({ frames }) => frames.length > 0)
-}
-
-/* Main Menu */
-
-function startScreen() {
-  cls(0)
-  map(0, 0, 30, 17)
-
-  font('DOT DASH PIT', 15, 15, 0, 7, 8, false, 1)
-
-  print('HIGH SCORE:', HISTORY_X, HISTORY_Y, 6, false)
-  // TODO highScore
-  print('0'.padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
-
-  if (anyKeyPressed()) {
-    currentScreen = 'gameScreen'
-  }
-}
-
-/* Gameover */
-
-function gameoverScreen() {
-  cls(0)
-  map(0, 0, 30, 17)
-  drawFX()
-  drawEnemies()
-  drawPlayer()
-
-  if (effects.length === 0) {
-    print('GAME OVER', HISTORY_X, HISTORY_Y, 10, false)
-    print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
-
-    if (anyKeyPressed()) {
-      reset()
-    }
-  }
-}
-
-function gameover() {
-  effects = [
-    {
-      type: 'flash',
-      frames: '77777777777765432'.split(''),
-    },
-  ]
-  currentScreen = 'gameoverScreen'
-}
-
-/* Gameplay */
-
-function gameScreen() {
-  checkCollisions()
-  spawnEnemies()
-
-  handleMoves()
-  handleMorse()
-
-  moveEnemies()
-
-  drawArena()
-  drawInterface()
-  drawFX()
-  drawEnemies()
-  drawPlayer()
-  drawEnemyLetters()
-}
-
-/* Arena */
-
-function drawArena() {
-  cls(0)
-  map(30, 0, 30, 17)
-}
-
-/* Interface */
-
-function drawInterface() {
-  drawMorse(player.key.buffer, 100, 123, 15, 36)
-
-  print(
-    player.key.history.padStart(HISTORY_LENGTH, ' '),
-    HISTORY_X,
-    HISTORY_Y,
-    6,
-    true,
-  )
-  print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
-}
-
-function drawMorse(codeString, x, y, color, width) {
-  const code = codeString.slice(-7).split('')
-  const l = code.reduce((acc, c) => acc + (c === '-' ? 4 : 2), 0)
-  let offset = x + 1 + (width ? width / 2 - Math.floor((l - 1) / 2) - 1 : 0)
-
-  code.forEach((c) => {
-    if (c === '-') {
-      rect(offset, y, 3, 1, color)
-      offset += 4
-    } else {
-      rect(offset, y, 1, 1, color)
-      offset += 2
-    }
-  })
-}
-
-/* Player */
-
-function handleMoves() {
-  let dx = 0
-  if (btn(BTN_L)) dx -= 1
-  if (btn(BTN_R)) dx += 1
-
-  let dy = 0
-  if (btn(BTN_U)) dy -= 1
-  if (btn(BTN_D)) dy += 1
-
-  const norm =
-    playerStates[player.state].speed /
-    ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
-
-  const clamp = (value) => (min, max) => Math.max(min, Math.min(max, value))
-
-  player.position = {
-    x: clamp(player.position.x + dx * norm)(
-      arena.bounds.left,
-      arena.bounds.right,
-    ),
-    y: clamp(player.position.y + dy * norm)(
-      arena.bounds.top,
-      arena.bounds.bottom,
-    ),
-  }
-}
-
-function playMorseKey(seed) {
-  const bySeed = (from, to) => Math.floor(seed * (to - from + 1)) + from
-
-  const note = bySeed(57, 72)
-  const volume = bySeed(8, 10)
-
-  sfx(4, note, 4, 0, volume, 0)
-}
-
-function handleMorse() {
-  const { key } = player
-  const now = time()
-
-  const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
-
-  /* Down */
-  if (buttonPressed && !key.isDown) {
-    key.isDown = true
-    key.downAt = now
-  }
-
-  /* Hold */
-  if (buttonPressed && key.isDown) {
-    const isDash = now - key.downAt > DOT_DASH_THRESHOLD
-    player.state = isDash ? 'dash' : 'dot'
-    playMorseKey(arena.waveSeed)
-  }
-
-  /* Release */
-  if (!buttonPressed && key.isDown) {
-    player.state = 'default'
-    key.isDown = false
-    key.upAt = now
-    key.buffer += key.upAt - key.downAt < DOT_DASH_THRESHOLD ? '.' : '-'
-
-    effects.push({
-      type: 'detection',
-      frames: [8],
-      to: player.position,
-    })
-  }
-
-  /* Flush */
-  if (
-    !buttonPressed &&
-    key.buffer.length > 0 &&
-    now - key.upAt > IDLE_TIMEOUT
-  ) {
-    if (morseToLetter[key.buffer]) {
-      const letter = morseToLetter[key.buffer]
-      destroyEnemiesByLetter(letter)
-      key.history += letter
-    } else {
-      key.history += ' '
-    }
-    key.buffer = ''
-    key.history = key.history.slice(-1 * HISTORY_LENGTH)
-  }
-}
-
-function drawPlayer() {
-  drawSprite(
-    playerStates[player.state].sprite,
-    player.position.x,
-    player.position.y,
-  )
-}
-
-/* Enemies */
 
 function checkCollisions() {
   const collide = (enemy) =>
@@ -581,13 +440,13 @@ function destroyEnemiesByLetter(letter) {
 }
 
 function drawEnemies() {
-  enemies
-    .map((enemy) => [
+  enemies.forEach((enemy) =>
+    drawSprite(
       enemyBlueprints[enemy.type].sprite,
       enemy.positions[0].x,
       enemy.positions[0].y,
-    ])
-    .forEach(([sprite, x, y]) => drawSprite(sprite, x, y))
+    ),
+  )
 }
 
 function drawEnemyLetters() {
@@ -629,6 +488,148 @@ function drawEnemyLetters() {
       drawMorse(code, hintPosition.x, hintPosition.y, 2, hintWidth)
     }
   })
+}
+
+/* Effects */
+
+/** @type {Effect[]} */
+let effects = []
+
+const effectRenderers = {
+  flash: ({ frames }) => {
+    const color = frames.shift()
+    cls(color)
+  },
+  laser: ({ from, to, frames }) => {
+    const color = frames.shift()
+    line(from.x, from.y, to.x, to.y, color)
+    circ(from.x, from.y, frames.length / 3, color)
+    circ(to.x, to.y, frames.length / 2, color)
+    circb(to.x, to.y, frames.length, color + 3)
+  },
+  nuke: ({ to, frames }) => {
+    const color = frames.shift()
+    circ(to.x, to.y, Math.pow(frames.length, 5), color)
+  },
+  verticalLine: ({ to, frames }) => {
+    const color = frames.shift()
+    rect(0, to.y - frames.length, SCREEN_W, frames.length * 2, color)
+  },
+  horizontalLine: ({ to, frames }) => {
+    const color = frames.shift()
+    rect(to.x - frames.length, 0, frames.length * 2, SCREEN_W, color)
+  },
+  detection: ({ to, frames }) => {
+    const color = frames.shift()
+    const w = arena.spriteHalfSize
+    const d = frames.length + 2 * w
+    const corners = [
+      [+1, +1],
+      [+1, -1],
+      [-1, +1],
+      [-1, -1],
+    ]
+
+    corners.forEach(([dx, dy]) => {
+      const x = to.x + dx * d
+      const y = to.y + dy * d
+
+      line(x, y, x - dx * w, y, color)
+      line(x, y, x, y - dy * w, color)
+    })
+  },
+}
+
+function drawFX() {
+  effects
+    .map((effect) => ({
+      ...effect,
+      from: worldToScreen(effect.from ?? {}),
+      to: worldToScreen(effect.to ?? {}),
+    }))
+    .forEach((effect) => effectRenderers[effect.type](effect))
+
+  effects = effects.filter(({ frames }) => frames.length > 0)
+}
+
+/* HUD */
+
+function drawHUD() {
+  drawMorse(player.key.buffer, 100, 123, 15, 36)
+
+  print(
+    player.key.history.padStart(HISTORY_LENGTH, ' '),
+    HISTORY_X,
+    HISTORY_Y,
+    6,
+    true,
+  )
+  print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
+}
+
+/* Start Screen */
+
+function startScreen() {
+  cls(0)
+  map(0, 0, 30, 17)
+
+  font('DOT DASH PIT', 15, 15, 0, 7, 8, false, 1)
+
+  print('HIGH SCORE:', HISTORY_X, HISTORY_Y, 6, false)
+  // TODO highScore
+  print('0'.padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
+
+  if (anyKeyPressed()) {
+    currentScreen = 'gameScreen'
+  }
+}
+
+/* Gameplay */
+
+function gameScreen() {
+  checkCollisions()
+  spawnEnemies()
+
+  handleMoves()
+  handleMorse()
+
+  moveEnemies()
+
+  drawArena()
+  drawHUD()
+  drawFX()
+  drawEnemies()
+  drawPlayer()
+  drawEnemyLetters()
+}
+
+/* Game Over */
+
+function gameoverScreen() {
+  cls(0)
+  map(0, 0, 30, 17)
+  drawFX()
+  drawEnemies()
+  drawPlayer()
+
+  if (effects.length === 0) {
+    print('GAME OVER', HISTORY_X, HISTORY_Y, 10, false)
+    print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
+
+    if (anyKeyPressed()) {
+      reset()
+    }
+  }
+}
+
+function gameover() {
+  effects = [
+    {
+      type: 'flash',
+      frames: '77777777777765432'.split(''),
+    },
+  ]
+  currentScreen = 'gameoverScreen'
 }
 
 /* Utils */
@@ -691,12 +692,12 @@ function anyKeyPressed() {
 /* Constants */
 
 /* Interface */
-
 const HISTORY_LENGTH = 14
 const HISTORY_X = 7
 const HISTORY_Y = 118
 const SCORE_X = 152
 const SCORE_Y = 125
+const CODE_DISPLAY_W = 7
 
 /* Screen */
 const SCREEN_W = 240
