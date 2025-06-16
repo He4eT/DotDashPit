@@ -11,7 +11,7 @@
 /* Config */
 
 const DOT_DASH_THRESHOLD = 200
-const IDLE_TIMEOUT = 500
+const DOT_DASH_IDLE_TIMEOUT = 500
 
 const HINT_DISTANCE = 30
 
@@ -213,7 +213,7 @@ function handleMorse() {
   if (
     !buttonPressed &&
     key.buffer.length > 0 &&
-    now - key.upAt > IDLE_TIMEOUT
+    now - key.upAt > DOT_DASH_IDLE_TIMEOUT
   ) {
     if (morseToLetter[key.buffer]) {
       const letter = morseToLetter[key.buffer]
