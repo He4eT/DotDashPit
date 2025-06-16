@@ -107,7 +107,6 @@ const arena = {
     bottom: 105,
     left: 0,
   },
-  spriteHalfSize: 3,
   wave: 0,
   waveSeed: 0,
 }
@@ -372,7 +371,7 @@ function spawnEnemies() {
 
   const getSpawnPosition = (type) => {
     const minDistance = enemyBlueprints[type].spawnDistance
-    const b = 4 * arena.spriteHalfSize
+    const b = 4 * SPRITE_HALF
     let x, y, distance
 
     do {
@@ -521,7 +520,7 @@ const effectRenderers = {
   },
   detection: ({ to, frames }) => {
     const color = frames.shift()
-    const w = arena.spriteHalfSize
+    const w = SPRITE_HALF
     const d = frames.length + 2 * w
     const corners = [
       [+1, +1],
@@ -672,12 +671,7 @@ function drawSprite(spriteIndex, x, y) {
   const colorkey = 0
   const center = worldToScreen({ x, y })
 
-  spr(
-    spriteIndex,
-    center.x - arena.spriteHalfSize,
-    center.y - arena.spriteHalfSize,
-    colorkey,
-  )
+  spr(spriteIndex, center.x - SPRITE_HALF, center.y - SPRITE_HALF, colorkey)
 }
 
 function anyKeyPressed() {
@@ -698,6 +692,7 @@ const HISTORY_Y = 118
 const SCORE_X = 152
 const SCORE_Y = 125
 const CODE_DISPLAY_W = 7
+const SPRITE_HALF = 3
 
 /* Screen */
 const SCREEN_W = 240
@@ -726,7 +721,6 @@ const BTN_Y = 7
  *     bottom: number,
  *     left: number,
  *   },
- *   spriteHalfSize: number,
  *   wave: number,
  *   waveSeed: number,
  * }} Arena
