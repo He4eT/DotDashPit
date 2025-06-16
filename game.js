@@ -273,11 +273,10 @@ function startScreen() {
   cls(0)
   map(0, 0, 30, 17)
 
-  const title = 'Morse Pit'
-  print(title, 12, 12, 3, false, 2)
+  font('DOT DASH PIT', 15, 15, 0, 7, 8, false, 1)
 
-  const instruction = 'Press any key to start'
-  print(instruction, 12, 30, 4)
+  print('HIGH SCORE:', 7, 118, 6, false)
+  print('0'.padStart(14, ' '), 152, 125, 6, true)
 
   if (anyKeyPressed()) {
     currentScreen = 'gameScreen'
@@ -294,7 +293,7 @@ function gameoverScreen() {
   drawPlayer()
 
   if (effects.length === 0) {
-    const title = 'Game Over'
+    const title = 'GAME OVER'
     print(title, 7, 118, 10, false)
     print(player.score.toString().padStart(14, ' '), 152, 125, 6, true)
 
