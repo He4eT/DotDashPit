@@ -182,7 +182,7 @@ function handleMorse() {
   const { key } = player
   const now = time()
 
-  const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].map(btn).some(Boolean)
+  const buttonPressed = [BTN_A, BTN_B, BTN_X, BTN_Y].some(btn)
 
   /* Down */
   if (buttonPressed && !key.isDown) {
@@ -704,12 +704,9 @@ function drawSprite(spriteIndex, x, y) {
 }
 
 function anyKeyPressed() {
-  for (let i = 0; i < 8; i++) {
-    if (btnp(i)) {
-      return true
-    }
-  }
-  return false
+  return arr(8)
+    .map((_, i) => i)
+    .some(btnp)
 }
 
 /* Constants */
