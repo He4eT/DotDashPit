@@ -107,6 +107,7 @@ const arena = {
     bottom: 105,
     left: 0,
   },
+  highscore: pmem(0),
   wave: 0,
   waveSeed: 0,
 }
@@ -557,13 +558,19 @@ function drawHUD() {
   drawMorse(player.key.buffer, 100, 123, 15, 36)
 
   print(
-    player.key.history.padStart(HISTORY_LENGTH, ' '),
+    player.key.history.padStart(HISTORY_LENGTH),
     HISTORY_X,
     HISTORY_Y,
     6,
     true,
   )
-  print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
+  print(
+    player.score.toString().padStart(SCORE_LENGTH),
+    SCORE_X,
+    SCORE_Y,
+    6,
+    true,
+  )
 }
 
 /* Start Screen */
@@ -575,8 +582,13 @@ function startScreen() {
   font('DOT DASH PIT', 15, 15, 0, 7, 8, false, 1)
 
   print('HIGH SCORE:', HISTORY_X, HISTORY_Y, 6, false)
-  // TODO highScore
-  print('0'.padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
+  print(
+    String(arena.highscore).padStart(SCORE_LENGTH),
+    SCORE_X,
+    SCORE_Y,
+    6,
+    true,
+  )
 
   if (anyKeyPressed()) {
     currentScreen = 'gameScreen'
@@ -612,8 +624,20 @@ function gameoverScreen() {
   drawPlayer()
 
   if (effects.length === 0) {
-    print('GAME OVER', HISTORY_X, HISTORY_Y, 10, false)
-    print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
+    print(
+      player.score.toString().padStart(SCORE_LENGTH),
+      SCORE_X,
+      SCORE_Y,
+      6,
+      true,
+    )
+    print(
+      player.score > arena.highscore ? 'NEW HIGH SCORE!' : 'GAME OVER',
+      HISTORY_X,
+      HISTORY_Y,
+      player.score > arena.highscore ? 9 : 10,
+      false,
+    )
 
     if (anyKeyPressed()) {
       reset()
@@ -628,6 +652,11 @@ function gameover() {
       frames: '77777777777765432'.split(''),
     },
   ]
+
+  if (player.score > arena.highscore) {
+    pmem(0, player.score)
+  }
+
   currentScreen = 'gameoverScreen'
 }
 
@@ -689,6 +718,7 @@ function anyKeyPressed() {
 const HISTORY_LENGTH = 14
 const HISTORY_X = 7
 const HISTORY_Y = 118
+const SCORE_LENGTH = 14
 const SCORE_X = 152
 const SCORE_Y = 125
 const CODE_DISPLAY_W = 7
@@ -721,6 +751,7 @@ const BTN_Y = 7
  *     bottom: number,
  *     left: number,
  *   },
+ *   highscore: number,
  *   wave: number,
  *   waveSeed: number,
  * }} Arena
