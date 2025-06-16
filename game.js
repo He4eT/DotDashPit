@@ -164,8 +164,6 @@ function handleMoves() {
     playerStates[player.state].speed /
     ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
 
-  const clamp = (value) => (min, max) => Math.max(min, Math.min(max, value))
-
   player.position = {
     x: clamp(player.position.x + dx * norm)(
       arena.bounds.left,
@@ -668,6 +666,10 @@ function arr(n, filler) {
     result.push(filler)
   }
   return result
+}
+
+function clamp(value) {
+  return (min, max) => Math.max(min, Math.min(max, value))
 }
 
 function rnd(from, to) {
