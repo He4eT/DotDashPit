@@ -10,8 +10,12 @@
 
 /* Config */
 
-const HISTORY_LENGTH = 14
+const DOT_DASH_THRESHOLD = 200
+const IDLE_TIMEOUT = 500
+
 const HINT_DISTANCE = 30
+
+/* */
 
 const morseCode = [
   ['A', ' .-   '],
@@ -267,6 +271,18 @@ const effectRenderers = {
   },
 }
 
+function drawFX() {
+  effects
+    .map((effect) => ({
+      ...effect,
+      from: worldToScreen(effect.from ?? {}),
+      to: worldToScreen(effect.to ?? {}),
+    }))
+    .forEach((effect) => effectRenderers[effect.type](effect))
+
+  effects = effects.filter(({ frames }) => frames.length > 0)
+}
+
 /* Main Menu */
 
 function startScreen() {
@@ -275,8 +291,9 @@ function startScreen() {
 
   font('DOT DASH PIT', 15, 15, 0, 7, 8, false, 1)
 
-  print('HIGH SCORE:', 7, 118, 6, false)
-  print('0'.padStart(14, ' '), 152, 125, 6, true)
+  print('HIGH SCORE:', HISTORY_X, HISTORY_Y, 6, false)
+  // TODO highScore
+  print('0'.padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
 
   if (anyKeyPressed()) {
     currentScreen = 'gameScreen'
@@ -293,9 +310,8 @@ function gameoverScreen() {
   drawPlayer()
 
   if (effects.length === 0) {
-    const title = 'GAME OVER'
-    print(title, 7, 118, 10, false)
-    print(player.score.toString().padStart(14, ' '), 152, 125, 6, true)
+    print('GAME OVER', HISTORY_X, HISTORY_Y, 10, false)
+    print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
 
     if (anyKeyPressed()) {
       reset()
@@ -344,8 +360,14 @@ function drawArena() {
 function drawInterface() {
   drawMorse(player.key.buffer, 100, 123, 15, 36)
 
-  print(player.key.history.padStart(HISTORY_LENGTH, ' '), 7, 118, 6, true)
-  print(player.score.toString().padStart(14, ' '), 152, 125, 6, true)
+  print(
+    player.key.history.padStart(HISTORY_LENGTH, ' '),
+    HISTORY_X,
+    HISTORY_Y,
+    6,
+    true,
+  )
+  print(player.score.toString().padStart(14, ' '), SCORE_X, SCORE_Y, 6, true)
 }
 
 function drawMorse(codeString, x, y, color, width) {
@@ -379,14 +401,16 @@ function handleMoves() {
     playerStates[player.state].speed /
     ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
 
+  const clamp = (value) => (min, max) => Math.max(min, Math.min(max, value))
+
   player.position = {
-    x: Math.max(
+    x: clamp(player.position.x + dx * norm)(
       arena.bounds.left,
-      Math.min(arena.bounds.right, player.position.x + dx * norm),
+      arena.bounds.right,
     ),
-    y: Math.max(
+    y: clamp(player.position.y + dy * norm)(
       arena.bounds.top,
-      Math.min(arena.bounds.bottom, player.position.y + dy * norm),
+      arena.bounds.bottom,
     ),
   }
 }
@@ -401,9 +425,6 @@ function playMorseKey(seed) {
 }
 
 function handleMorse() {
-  const DOT_DASH_THRESHOLD = 200
-  const IDLE_TIMEOUT = 500
-
   const { key } = player
   const now = time()
 
@@ -463,6 +484,15 @@ function drawPlayer() {
 }
 
 /* Enemies */
+
+function checkCollisions() {
+  const collide = (enemy) =>
+    getDistance(player.position, enemy.positions[0]) < enemy.dangerZone
+
+  if (enemies.some(collide)) {
+    gameover()
+  }
+}
 
 function spawnEnemies() {
   if (enemies.length > 0) {
@@ -550,15 +580,6 @@ function destroyEnemiesByLetter(letter) {
   enemies = enemies.filter((enemy) => enemy.letter !== letter)
 }
 
-function checkCollisions() {
-  const collide = (enemy) =>
-    getDistance(player.position, enemy.positions[0]) < enemy.dangerZone
-
-  if (enemies.some(collide)) {
-    gameover()
-  }
-}
-
 function drawEnemies() {
   enemies
     .map((enemy) => [
@@ -608,20 +629,6 @@ function drawEnemyLetters() {
       drawMorse(code, hintPosition.x, hintPosition.y, 2, hintWidth)
     }
   })
-}
-
-/* Effects */
-
-function drawFX() {
-  effects
-    .map((effect) => ({
-      ...effect,
-      from: worldToScreen(effect.from ?? {}),
-      to: worldToScreen(effect.to ?? {}),
-    }))
-    .forEach((effect) => effectRenderers[effect.type](effect))
-
-  effects = effects.filter(({ frames }) => frames.length > 0)
 }
 
 /* Utils */
@@ -682,6 +689,14 @@ function anyKeyPressed() {
 }
 
 /* Constants */
+
+/* Interface */
+
+const HISTORY_LENGTH = 14
+const HISTORY_X = 7
+const HISTORY_Y = 118
+const SCORE_X = 152
+const SCORE_Y = 125
 
 /* Screen */
 const SCREEN_W = 240
