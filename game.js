@@ -102,6 +102,7 @@ const arena = {
     bottom: 105,
     left: 0,
   },
+  gameoverTimestamp: 0,
   highscore: pmem(0),
   wave: 0,
   waveSeed: 0,
@@ -223,11 +224,7 @@ function handleMorse() {
 }
 
 function drawPlayer() {
-  drawSprite(
-    playerStates[player.state].sprite,
-    player.position.x,
-    player.position.y,
-  )
+  drawSprite(playerStates[player.state].sprite, player.position)
 }
 
 /* Enemies */
@@ -435,11 +432,7 @@ function destroyEnemiesByLetter(letter) {
 
 function drawEnemies() {
   enemies.forEach((enemy) =>
-    drawSprite(
-      enemyBlueprints[enemy.type].sprite,
-      enemy.positions[0].x,
-      enemy.positions[0].y,
-    ),
+    drawSprite(enemyBlueprints[enemy.type].sprite, enemy.positions[0]),
   )
 }
 
@@ -632,13 +625,14 @@ function gameoverScreen() {
       false,
     )
 
-    if (anyKeyPressed()) {
+    if (time() - arena.gameoverTimestamp >= 500 && anyKeyPressed()) {
       reset()
     }
   }
 }
 
 function gameover() {
+  sfx(0, 'F-2', 30, 1, 5)
   effects = [
     {
       type: 'flash',
@@ -650,6 +644,7 @@ function gameover() {
     pmem(0, player.score)
   }
 
+  arena.gameoverTimestamp = time()
   currentScreen = 'gameoverScreen'
 }
 
@@ -694,9 +689,9 @@ function worldToScreen({ x, y }) {
   }
 }
 
-function drawSprite(spriteIndex, x, y) {
+function drawSprite(spriteIndex, position) {
   const colorkey = 0
-  const center = worldToScreen({ x, y })
+  const center = worldToScreen(position)
 
   spr(spriteIndex, center.x - SPRITE_RADIUS, center.y - SPRITE_RADIUS, colorkey)
 }
@@ -704,7 +699,7 @@ function drawSprite(spriteIndex, x, y) {
 function anyKeyPressed() {
   return arr(8)
     .map((_, i) => i)
-    .some(btnp)
+    .some((b) => btnp(b, 500))
 }
 
 /* Constants */
@@ -751,6 +746,7 @@ const BTN_Y = 7
  *     bottom: number,
  *     left: number,
  *   },
+ *   gameoverTimestamp: number,
  *   highscore: number,
  *   wave: number,
  *   waveSeed: number,
