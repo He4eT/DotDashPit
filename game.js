@@ -85,7 +85,7 @@ function drawMorse(codeList, x, y, color, width) {
 function playMorseKey(seed) {
   const note = rnd(57, 72, seed)
   const volume = rnd(8, 10, seed)
-  sfx(4, note, 4, 0, volume, 0)
+  sfx(0, note, 4, 0, volume, 0)
 }
 
 /* Arena */
@@ -632,20 +632,22 @@ function gameoverScreen() {
 }
 
 function gameover() {
-  sfx(0, 'F-2', 30, 1, 5)
+  currentScreen = 'gameoverScreen'
+  arena.gameoverTimestamp = time()
+
+  if (player.score > arena.highscore) {
+    pmem(0, player.score)
+    sfx(0, 'C-5', 30, 1, 6)
+  } else {
+    sfx(0, 'F-2', 30, 1, 5)
+  }
+
   effects = [
     {
       type: 'flash',
       frames: '77777777777765432'.split(''),
     },
   ]
-
-  if (player.score > arena.highscore) {
-    pmem(0, player.score)
-  }
-
-  arena.gameoverTimestamp = time()
-  currentScreen = 'gameoverScreen'
 }
 
 /* Utils */
