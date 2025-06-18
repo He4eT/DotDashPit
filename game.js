@@ -245,7 +245,7 @@ const enemyBlueprints = {
     sprite: 273,
     spawnDistance: 40,
     maxSpeed: 0.9,
-    dangerZone: 8,
+    dangerZone: 6,
     value: 3,
     behaviour: (enemy) => {
       const jitter = 0.05
@@ -266,7 +266,7 @@ const enemyBlueprints = {
     sprite: 274,
     spawnDistance: 100,
     maxSpeed: 1.2,
-    dangerZone: 8,
+    dangerZone: 6,
     value: 5,
     behaviour: (enemy) => {
       const minSpeed = 0.6
@@ -302,7 +302,7 @@ const enemyBlueprints = {
     sprite: 276,
     spawnDistance: 80,
     maxSpeed: 2,
-    dangerZone: 6,
+    dangerZone: 5,
     value: 10,
     behaviour: (enemy) => {
       const laziness = 0.8
@@ -315,7 +315,7 @@ const enemyBlueprints = {
     sprite: 275,
     spawnDistance: 80,
     maxSpeed: 1,
-    dangerZone: 3,
+    dangerZone: 5,
     value: 10,
     behaviour: (enemy) => {
       const minSpeed = 0.5
