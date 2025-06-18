@@ -8,8 +8,6 @@
 // script:  js
 // version: 0.1
 
-/* Config */
-
 const DOT_DASH_THRESHOLD = 200
 const DOT_DASH_IDLE_TIMEOUT = 500
 
@@ -67,29 +65,26 @@ const morseToLetter = Object.fromEntries(
   morseCode.map((pair) => pair.reverse()),
 )
 
-function drawMorse(codeString, x, y, color, width) {
-  const code = codeString.slice(-1 * CODE_DISPLAY_W).split('')
-  const length = code.reduce((acc, c) => acc + (c === '-' ? 4 : 2), 0)
-  let offset =
-    x + 1 + (width ? width / 2 - Math.floor((length - 1) / 2) - 1 : 0)
+function morseWidth(codeList) {
+  return codeList.reduce(
+    (acc, x) => acc + MORSE_GAP + MORSE_SYMBOL_WIDTHS[x],
+    0,
+  )
+}
 
-  code.forEach((c) => {
-    if (c === '-') {
-      rect(offset, y, 3, 1, color)
-      offset += 4
-    } else {
-      rect(offset, y, 1, 1, color)
-      offset += 2
-    }
+function drawMorse(codeList, x, y, color, width) {
+  const paddingLeft = width ? (width - morseWidth(codeList)) / 2 : MORSE_GAP
+  let offset = x + paddingLeft
+
+  codeList.forEach((c) => {
+    rect(offset, y, MORSE_SYMBOL_WIDTHS[c], MORSE_GAP, color)
+    offset += MORSE_SYMBOL_WIDTHS[c] + MORSE_GAP
   })
 }
 
 function playMorseKey(seed) {
-  const bySeed = (from, to) => Math.floor(seed * (to - from + 1)) + from
-
-  const note = bySeed(57, 72)
-  const volume = bySeed(8, 10)
-
+  const note = rnd(57, 72, seed)
+  const volume = rnd(8, 10, seed)
   sfx(4, note, 4, 0, volume, 0)
 }
 
@@ -371,7 +366,7 @@ function spawnEnemies() {
 
   const getSpawnPosition = (type) => {
     const minDistance = enemyBlueprints[type].spawnDistance
-    const b = 4 * SPRITE_HALF
+    const b = 4 * SPRITE_RADIUS
     let x, y, distance
 
     do {
@@ -463,14 +458,12 @@ function drawEnemyLetters() {
     const screenPos = worldToScreen(letterPos)
 
     rect(screenPos.x - 4, screenPos.y - 5, 10, 11, bgColor)
-    font(enemy.letter, screenPos.x - 3, screenPos.y - 3, 0, 8, 8, true)
     rectb(screenPos.x - 4, screenPos.y - 5, 10, 11, borderColor)
+    font(enemy.letter, screenPos.x - 3, screenPos.y - 3, 0, 8, 8, true)
 
     if (getDistance(player.position, enemy.positions[0]) < HINT_DISTANCE) {
-      const code = letterToMorse[enemy.letter]
-
-      const hintWidth =
-        1 + code.split('').reduce((acc, x) => acc + { '.': 2, '-': 4 }[x], 0)
+      const code = letterToMorse[enemy.letter].split('')
+      const hintWidth = MORSE_GAP + morseWidth(code)
 
       const hintPosition = {
         x: screenPos.x - 4,
@@ -481,10 +474,10 @@ function drawEnemyLetters() {
         hintPosition.x,
         hintPosition.y - 1,
         Math.max(10, hintWidth),
-        3,
+        MORSE_GAP + 2,
         borderColor,
       )
-      drawMorse(code, hintPosition.x, hintPosition.y, 2, hintWidth)
+      drawMorse(code, hintPosition.x, hintPosition.y, 2)
     }
   })
 }
@@ -520,7 +513,7 @@ const effectRenderers = {
   },
   detection: ({ to, frames }) => {
     const color = frames.shift()
-    const w = SPRITE_HALF
+    const w = SPRITE_RADIUS
     const d = frames.length + 2 * w
     const corners = [
       [+1, +1],
@@ -554,7 +547,8 @@ function drawFX() {
 /* HUD */
 
 function drawHUD() {
-  drawMorse(player.key.buffer, 100, 123, 15, 36)
+  const recentMorse = player.key.buffer.slice(-MORSE_DISPLAY_LIMIT).split('')
+  drawMorse(recentMorse, 101, 123, 15, 36)
 
   print(
     player.key.history.padStart(HISTORY_LENGTH),
@@ -673,8 +667,9 @@ function clamp(value) {
   return (min, max) => Math.max(min, Math.min(max, value))
 }
 
-function rnd(from, to) {
-  return Math.floor(Math.random() * (to - from + 1)) + from
+function rnd(from, to, seed) {
+  const rand = typeof seed === 'number' ? seed : Math.random()
+  return Math.floor(rand * (to - from + 1)) + from
 }
 
 function getDistance(from, to) {
@@ -703,7 +698,7 @@ function drawSprite(spriteIndex, x, y) {
   const colorkey = 0
   const center = worldToScreen({ x, y })
 
-  spr(spriteIndex, center.x - SPRITE_HALF, center.y - SPRITE_HALF, colorkey)
+  spr(spriteIndex, center.x - SPRITE_RADIUS, center.y - SPRITE_RADIUS, colorkey)
 }
 
 function anyKeyPressed() {
@@ -715,14 +710,19 @@ function anyKeyPressed() {
 /* Constants */
 
 /* Interface */
+const SPRITE_RADIUS = 3
 const HISTORY_LENGTH = 14
 const HISTORY_X = 7
 const HISTORY_Y = 118
 const SCORE_LENGTH = 14
 const SCORE_X = 152
 const SCORE_Y = 125
-const CODE_DISPLAY_W = 7
-const SPRITE_HALF = 3
+const MORSE_DISPLAY_LIMIT = 7
+const MORSE_GAP = 1
+const MORSE_SYMBOL_WIDTHS = {
+  '.': 1 * MORSE_GAP,
+  '-': 3 * MORSE_GAP,
+}
 
 /* Screen */
 const SCREEN_W = 240
