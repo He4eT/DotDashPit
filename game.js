@@ -1,4 +1,4 @@
-// title:   DotDashPit
+// title:   DOT DASH PIT
 // desc:    Defeat endless waves of enemies using Morse code.
 // author:  He4eT
 // site:    https://github.com/He4eT/DotDashPit
