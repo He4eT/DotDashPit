@@ -161,14 +161,14 @@ function handleMoves() {
     ([dx, dy].every((d) => d !== 0) ? Math.SQRT2 : 1)
 
   player.position = {
-    x: clamp(player.position.x + dx * norm)(
+    x: clamp(
       arena.bounds.left,
       arena.bounds.right,
-    ),
-    y: clamp(player.position.y + dy * norm)(
+    )(player.position.x + dx * norm),
+    y: clamp(
       arena.bounds.top,
       arena.bounds.bottom,
-    ),
+    )(player.position.y + dy * norm),
   }
 }
 
@@ -660,8 +660,8 @@ function arr(n, filler) {
   return result
 }
 
-function clamp(value) {
-  return (min, max) => Math.max(min, Math.min(max, value))
+function clamp(min, max) {
+  return (value) => Math.max(min, Math.min(max, value))
 }
 
 function rnd(from, to, seed) {
