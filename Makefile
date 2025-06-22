@@ -25,13 +25,17 @@ export_png:
 	${tic_cli} \
 		'load ${game_src} & save ${build_dir}/${game_name}.png & exit'
 
-import_cover:
-	${tic_cli} \
-		'load ${game_src} & import screen ${cover_src} & exit'
-
 release:
 	@make cleanup
 	@make export_tic
 	@make export_png
+
+export_cover:
+	${tic_cli} \
+		'load ${game_src} & export screen ${cover_src} & exit'
+
+import_cover:
+	${tic_cli} \
+		'load ${game_src} & import screen ${cover_src} & exit'
 
 # vim: set ts=4 sw=4 autoindent noexpandtab:
