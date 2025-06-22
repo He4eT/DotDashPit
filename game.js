@@ -637,9 +637,9 @@ function gameover() {
 
   if (player.score > arena.highscore) {
     pmem(0, player.score)
-    sfx(0, 'C-5', 30, 1, 6)
+    sfx(0, 38, 30, 1, 6)
   } else {
-    sfx(0, 'F-2', 30, 1, 5)
+    sfx(0, 17, 30, 1, 5)
   }
 
   effects = [
