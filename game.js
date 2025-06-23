@@ -11,6 +11,7 @@
 const DOT_DASH_THRESHOLD = 200
 const DOT_DASH_IDLE_TIMEOUT = 500
 
+const FONT_SIZE = 1
 const HINT_DISTANCE = 30
 
 /* Game Screens */
@@ -437,40 +438,50 @@ function drawEnemies() {
 }
 
 function drawEnemyLetters() {
+  const backgroundColor = 2
+  const borderColor = 5
+  const letterWidth = 8 * FONT_SIZE
+  const letterHeight = 7 * FONT_SIZE
+  const boxWidth = letterWidth + 2 * FONT_SIZE
+  const boxHeight = letterHeight + 4 * FONT_SIZE
+  const offset = 9 + 2 * SPRITE_RADIUS * FONT_SIZE
+
   enemies.forEach((enemy) => {
-    const bgColor = 2
-    const borderColor = 5
     const enemyPosition = enemy.positions[0]
     const d = getDirection(player.position, enemyPosition)
 
-    const letterPos = {
-      x: enemyPosition.x + d.x * 15,
-      y: enemyPosition.y + d.y * 15,
+    const letterPosition = {
+      x: enemyPosition.x + d.x * offset,
+      y: enemyPosition.y + d.y * offset,
     }
 
-    const screenPos = worldToScreen(letterPos)
+    const screenPosition = worldToScreen(letterPosition)
+    const boxX = screenPosition.x - boxWidth / 2 + FONT_SIZE
+    const boxY = screenPosition.y - boxHeight / 2 + FONT_SIZE
+    const letterX = screenPosition.x - letterWidth / 2 + FONT_SIZE
+    const letterY = screenPosition.y - letterHeight / 2 + FONT_SIZE
 
-    rect(screenPos.x - 4, screenPos.y - 5, 10, 11, bgColor)
-    rectb(screenPos.x - 4, screenPos.y - 5, 10, 11, borderColor)
-    font(enemy.letter, screenPos.x - 3, screenPos.y - 3, 0, 8, 8, true)
+    rect(boxX, boxY, boxWidth, boxHeight, backgroundColor)
+    rectb(boxX, boxY, boxWidth, boxHeight, borderColor)
+    font(enemy.letter, letterX, letterY, 0, 8, 8, true, FONT_SIZE)
 
     if (getDistance(player.position, enemy.positions[0]) < HINT_DISTANCE) {
       const code = letterToMorse[enemy.letter].split('')
       const hintWidth = MORSE_GAP + morseWidth(code)
 
       const hintPosition = {
-        x: screenPos.x - 4,
-        y: screenPos.y + 8,
+        x: boxX,
+        y: boxY + boxHeight + 2,
       }
 
       rect(
         hintPosition.x,
         hintPosition.y - 1,
-        Math.max(10, hintWidth),
+        Math.max(boxWidth, hintWidth),
         MORSE_GAP + 2,
         borderColor,
       )
-      drawMorse(code, hintPosition.x, hintPosition.y, 2)
+      drawMorse(code, hintPosition.x, hintPosition.y, backgroundColor)
     }
   })
 }
