@@ -482,7 +482,7 @@ let effects = []
 
 const effectRenderers = {
   flash: ({ frames }) => {
-    const color = frames.shift()
+    const color = parseInt(frames.shift())
     cls(color)
   },
   laser: ({ from, to, frames }) => {
