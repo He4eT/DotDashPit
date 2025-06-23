@@ -38,4 +38,10 @@ import_cover:
 	${tic_cli} \
 		'load ${game_src} & import screen ${cover_src} & exit'
 
+build_es3:
+	npm run build
+	./polyfills/inject.sh
+	@make release
+	git restore ${game_src}
+
 # vim: set ts=4 sw=4 autoindent noexpandtab:
