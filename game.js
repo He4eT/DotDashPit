@@ -9,7 +9,7 @@
 // version: 1.0
 
 const DOT_DASH_THRESHOLD = 200
-const DOT_DASH_IDLE_TIMEOUT = 500
+const DOT_DASH_IDLE_TIMEOUT = 450
 
 const FONT_SIZE = 1
 const HINT_DISTANCE = 30
@@ -356,10 +356,18 @@ function spawnEnemies() {
   const enemyCount = 1 + Math.floor(arena.wave / 2)
 
   const getType = (wave) => {
-    if (wave <= 2) return 'point'
-
     const availableTypes = Object.keys(enemyBlueprints)
+
+    if (wave <= 2) return availableTypes[0]
+    if (wave <= 6) return availableTypes[wave - 2]
+
     return availableTypes[rnd(0, availableTypes.length - 1)]
+  }
+
+  const getSpeed = (type, wave) => {
+    if (wave <= 6) return 0.3
+
+    return enemyBlueprints[type].maxSpeed * Math.random()
   }
 
   const getSpawnPosition = (type) => {
@@ -380,7 +388,7 @@ function spawnEnemies() {
     const type = getType(arena.wave)
     return {
       type,
-      speed: enemyBlueprints[type].maxSpeed * Math.random(),
+      speed: getSpeed(type, arena.wave),
       value: enemyBlueprints[type].value,
       letter: alphabet[rnd(0, alphabet.length - 1)],
       positions: [getSpawnPosition(type), getSpawnPosition(type)],
