@@ -6,7 +6,7 @@
 // input:   gamepad
 // saveid:  DotDashPit
 // script:  js
-// version: 1.0
+// version: 1.1.0
 
 const DOT_DASH_THRESHOLD = 200
 const DOT_DASH_IDLE_TIMEOUT = 450
